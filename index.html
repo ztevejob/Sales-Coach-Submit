@@ -425,16 +425,13 @@
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(res => {
-                    console.log("Respon Google Sheets:", res);
                     if(res.status === "success") {
                         masterData = res.data || [];
                         submitHistory = res.submits || [];
                         muatDataSubmit();
-                    } else {
-                        console.error("Gagal memuat:", res.message);
                     }
                 })
-                .catch(err => console.error("Gagal terhubung ke Web App:", err));
+                .catch(err => console.error("Gagal memuat data:", err));
         };
 
         function switchTab(tabId) {
@@ -455,76 +452,80 @@
 
             titleHeader.textContent = `📋 Rekap Toko: ${selectedStoreFull}`;
 
-            // 1. Ambil staff berdasarkan store dari Master Karyawan
-            const staffList = masterData.filter(row => String(row[1] || "").trim() === selectedStoreFull);
-
-            // 2. Filter riwayat submit berdasarkan Nama Store (Kolom C / Index 2) & Bulan
-            const storeSubmits = submitHistory.filter(row => {
-                const waktu = String(row[0] || "").trim(); // Index 0: Timestamp
-                const namaStoreSheet = String(row[2] || "").trim(); // Index 2: Nama Store
-
-                if (namaStoreSheet !== selectedStoreFull) return false;
-
-                if (bulanFilter) {
-                    let matchBulan = false;
-                    if (waktu.includes('/')) {
-                        const parts = waktu.split(' ')[0].split('/');
-                        if (parts[1] === bulanFilter) matchBulan = true;
-                    } else if (waktu.includes('-')) {
-                        const parts = waktu.split(' ')[0].split('-');
-                        if (parts[1] === bulanFilter || parts[0] === bulanFilter) matchBulan = true;
-                    } else {
-                        if (waktu.includes(bulanFilter)) matchBulan = true;
+            // Ambil ulang data terbaru dari Google Sheets agar sinkron secara otomatis
+            fetch(WEB_APP_URL)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === "success") {
+                        submitHistory = res.submits || [];
                     }
-                    if (!matchBulan) return false;
-                }
-                return true;
-            });
 
-            // 3. Render Tabel Rekap Staff Toko
-            let html = `<tr><th>No</th><th>Nama Staff</th><th>Status</th></tr>`;
-            if (staffList.length === 0) {
-                html += `<tr><td colspan="3" style="text-align: center; color: #64748b;">Tidak ada staff di toko ini.</td></tr>`;
-            } else {
-                staffList.forEach((row, index) => {
-                    const namaStaffMaster = String(row[2] || "").trim().toLowerCase();
-                    
-                    const sudahSubmit = storeSubmits.some(sub => {
-                        const namaSalesSubmit = String(sub[1] || "").trim().toLowerCase(); // Index 1: Nama Sales
-                        return namaSalesSubmit === namaStaffMaster || namaSalesSubmit.includes(namaStaffMaster) || namaStaffMaster.includes(namaSalesSubmit);
+                    // 1. Ambil staff berdasarkan store dari Master Karyawan
+                    const staffList = masterData.filter(row => String(row[1] || "").trim() === selectedStoreFull);
+
+                    // 2. Filter riwayat submit berdasarkan Nama Store (Kolom C / Index 2) & Bulan
+                    const storeSubmits = submitHistory.filter(row => {
+                        const waktu = String(row[0] || "").trim(); // Index 0: Timestamp
+                        const namaStoreSheet = String(row[2] || "").trim(); // Index 2: Nama Store
+
+                        if (namaStoreSheet !== selectedStoreFull) return false;
+
+                        if (bulanFilter) {
+                            let matchBulan = false;
+                            if (waktu.includes(`/${bulanFilter}/`) || waktu.includes(`-${bulanFilter}-`) || waktu.startsWith(`${bulanFilter}/`) || waktu.includes(` ${bulanFilter}/`) || waktu.includes(bulanFilter)) {
+                                matchBulan = true;
+                            }
+                            if (!matchBulan) return false;
+                        }
+                        return true;
                     });
 
-                    const badgeHtml = sudahSubmit 
-                        ? `<span class="status-badge sudah">✅ Sudah</span>` 
-                        : `<span class="status-badge belum">⚠️ Belum</span>`;
+                    // 3. Render Tabel Rekap Staff Toko
+                    let html = `<tr><th>No</th><th>Nama Staff</th><th>Status</th></tr>`;
+                    if (staffList.length === 0) {
+                        html += `<tr><td colspan="3" style="text-align: center; color: #64748b;">Tidak ada staff di toko ini.</td></tr>`;
+                    } else {
+                        staffList.forEach((row, index) => {
+                            const namaStaffMaster = String(row[2] || "").trim().toLowerCase();
+                            
+                            const sudahSubmit = storeSubmits.some(sub => {
+                                const namaSalesSubmit = String(sub[1] || "").trim().toLowerCase(); // Index 1: Nama Sales
+                                return namaSalesSubmit === namaStaffMaster || namaSalesSubmit.includes(namaStaffMaster) || namaStaffMaster.includes(namaSalesSubmit);
+                            });
 
-                    html += `<tr>
-                        <td>${index + 1}</td>
-                        <td>${row[2] || '-'}</td>
-                        <td>${badgeHtml}</td>
-                    </tr>`;
-                });
-            }
-            tabel.innerHTML = html;
+                            const badgeHtml = sudahSubmit 
+                                ? `<span class="status-badge sudah">✅ Sudah</span>` 
+                                : `<span class="status-badge belum">⚠️ Belum</span>`;
 
-            // 4. Render Galeri Samping Toko (Index 3: Bukti Screenshot)
-            let galleryHtml = "";
-            if (storeSubmits.length === 0) {
-                galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 20px;">Belum ada submit pada bulan ini.</p>`;
-            } else {
-                storeSubmits.forEach(row => {
-                    let imgFormula = String(row[3] || "");
-                    let matchUrl = imgFormula.match(/"([^"]+)"/);
-                    if (matchUrl && matchUrl[1]) {
-                        galleryHtml += `
-                            <div class="store-gallery-item">
-                                <img src="${matchUrl[1]}" onclick="openModal('${matchUrl[1]}')">
-                                <p>${row[1]}<br><span style="font-size:9px; color:#94a3b8;">${row[0]}</span></p>
-                            </div>`;
+                            html += `<tr>
+                                <td>${index + 1}</td>
+                                <td>${row[2] || '-'}</td>
+                                <td>${badgeHtml}</td>
+                            </tr>`;
+                        });
                     }
-                });
-            }
-            galleryBox.innerHTML = galleryHtml;
+                    tabel.innerHTML = html;
+
+                    // 4. Render Galeri Samping Toko (Index 3: Bukti Screenshot)
+                    let galleryHtml = "";
+                    if (storeSubmits.length === 0) {
+                        galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 20px;">Belum ada submit pada bulan ini.</p>`;
+                    } else {
+                        storeSubmits.forEach(row => {
+                            let imgFormula = String(row[3] || "");
+                            let matchUrl = imgFormula.match(/"([^"]+)"/);
+                            if (matchUrl && matchUrl[1]) {
+                                galleryHtml += `
+                                    <div class="store-gallery-item">
+                                        <img src="${matchUrl[1]}" onclick="openModal('${matchUrl[1]}')">
+                                        <p>${row[1]}<br><span style="font-size:9px; color:#94a3b8;">${row[0]}</span></p>
+                                    </div>`;
+                            }
+                        });
+                    }
+                    galleryBox.innerHTML = galleryHtml;
+                })
+                .catch(err => console.error("Gagal menyinkronkan data submit:", err));
         }
 
         function cekStatusSubmit(namaSales) {
