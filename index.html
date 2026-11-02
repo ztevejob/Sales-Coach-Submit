@@ -43,9 +43,23 @@
         }
         .nav-btn.active, .nav-btn:hover { background: var(--primary); color: white; }
 
-        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
         .section { display: none; }
         .section.active { display: block; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .rekap-gallery-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 15px;
+            align-items: start;
+        }
 
         .card {
             background: var(--card-bg); padding: 22px; border-radius: 14px;
@@ -58,7 +72,6 @@
             border: 1px solid var(--border-color);
             border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 20px;
             background: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
@@ -99,17 +112,17 @@
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
             font-weight: 600;
         }
         .status-badge.belum { background-color: #fef3c7; color: #d97706; }
         .status-badge.sudah { background-color: #d1fae5; color: #059669; }
 
         .proof-thumbnail {
-            width: 60px; height: 60px; object-fit: cover; border-radius: 6px;
+            width: 50px; height: 50px; object-fit: cover; border-radius: 6px;
             border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s;
         }
         .proof-thumbnail:hover { transform: scale(1.05); }
@@ -135,12 +148,12 @@
 
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13.5px; color: #334155; }
-        input[type="file"], select {
+        input[type="file"], input[type="date"], select {
             width: 100%; padding: 10px; border: 1px solid var(--border-color);
             border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #fff;
         }
         #preview-img {
-            max-width: 100%; max-height: 180px; display: none; margin-top: 10px;
+            max-width: 100%; max-height: 160px; display: none; margin-top: 10px;
             border-radius: 8px; border: 1px solid var(--border-color);
         }
         .btn-submit {
@@ -151,6 +164,27 @@
         .btn-submit:hover { background: var(--primary-dark); }
         #loading { display: none; text-align: center; color: #64748b; margin-top: 10px; font-weight: 500; }
 
+        .data-table {
+            width: 100%; border-collapse: collapse; font-size: 12px;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 10px; border: 1px solid var(--border-color); text-align: left;
+        }
+        .data-table th { background-color: #f1f5f9; color: #334155; font-weight: 600; }
+
+        .store-gallery-box {
+            background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;
+            max-height: 380px; overflow-y: auto;
+        }
+        .store-gallery-item {
+            background: white; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; overflow: hidden;
+            text-align: center; padding: 6px;
+        }
+        .store-gallery-item img {
+            width: 100%; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer;
+        }
+        .store-gallery-item p { margin: 4px 0 0 0; font-size: 10.5px; color: #64748b; font-weight: 600; }
+
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
@@ -158,19 +192,10 @@
         .modal img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
 
-        .gallery-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px; margin-top: 20px;
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .rekap-gallery-grid { grid-template-columns: 1fr; }
         }
-        .gallery-item {
-            background: white; border: 1px solid var(--border-color);
-            border-radius: 10px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .gallery-item img { width: 100%; height: 130px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
-        .gallery-info { padding: 10px; }
-        .gallery-info h4 { margin: 0 0 4px 0; font-size: 13.5px; font-weight: 600; }
-        .gallery-info p { margin: 0; font-size: 11px; color: #64748b; }
-
         @media (max-width: 480px) {
             .navbar { padding: 12px 15px; }
             .container { margin: 12px auto; padding: 0 10px; }
@@ -185,106 +210,197 @@
         <h2>Sales Coach Activity</h2>
         <div class="nav-links">
             <button class="nav-btn active" onclick="switchTab('dashboard')">Submit & Profil</button>
-            <button class="nav-btn" onclick="switchTab('gallery')">Gallery</button>
+            <button class="nav-btn" onclick="switchTab('gallery')">Data & Rekap</button>
         </div>
     </div>
 
     <div class="container">
 
+        <!-- MENU 1: DASHBOARD -->
         <div id="dashboard" class="section active">
-            <div class="card">
-                <form id="uploadForm">
-                    
-                    <div class="profile-table-container">
-                        <div class="profile-header">
-                            <span>👤 EMPLOYEE PROFILE</span>
+            <div class="dashboard-grid">
+                
+                <!-- KOLOM KIRI -->
+                <div>
+                    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 20px;">
+                        <div class="profile-table-container">
+                            <div class="profile-header">
+                                <span>👤 EMPLOYEE PROFILE</span>
+                            </div>
+                            <table class="profile-table">
+                                <tr>
+                                    <th>Employee Name</th>
+                                    <td>
+                                        <div class="search-input-container">
+                                            <input type="text" id="searchNama" placeholder="Ketik nama karyawan..." required autocomplete="off">
+                                            <div id="autocompleteList" class="autocomplete-items"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Status Submit Hari Ini</th>
+                                    <td id="valStatus"><span class="status-badge belum">⚠️ Belum Submit</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Bukti Screenshot</th>
+                                    <td id="valBukti">-</td>
+                                </tr>
+                                <tr>
+                                    <th>Store</th>
+                                    <td id="valStore">-</td>
+                                </tr>
+                                <tr>
+                                    <th>NIK</th>
+                                    <td id="valNik">-</td>
+                                </tr>
+                                <tr>
+                                    <th>Work Experience</th>
+                                    <td id="valExp">-</td>
+                                </tr>
+                                <tr>
+                                    <th>SEED Registered Email</th>
+                                    <td id="valEmail">-</td>
+                                </tr>
+                                <tr>
+                                    <th>Positions</th>
+                                    <td id="valPosisi">-</td>
+                                </tr>
+                                <tr>
+                                    <th>RH</th>
+                                    <td id="valRh">-</td>
+                                </tr>
+                                <tr>
+                                    <th>AM</th>
+                                    <td id="valAm">-</td>
+                                </tr>
+                                <tr>
+                                    <th>Type Store</th>
+                                    <td id="valType">-</td>
+                                </tr>
+                                <tr>
+                                    <th>Trainer HO</th>
+                                    <td id="valTrainer">-</td>
+                                </tr>
+                            </table>
                         </div>
-                        <table class="profile-table">
-                            <tr>
-                                <th>Employee Name</th>
-                                <td>
-                                    <div class="search-input-container">
-                                        <input type="text" id="searchNama" placeholder="Ketik nama karyawan..." required autocomplete="off">
-                                        <div id="autocompleteList" class="autocomplete-items"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Status Submit Hari Ini</th>
-                                <td id="valStatus"><span class="status-badge belum">⚠️ Belum Submit</span></td>
-                            </tr>
-                            <tr>
-                                <th>Bukti Screenshot</th>
-                                <td id="valBukti">-</td>
-                            </tr>
-                            <tr>
-                                <th>Store</th>
-                                <td id="valStore">-</td>
-                            </tr>
-                            <tr>
-                                <th>NIK</th>
-                                <td id="valNik">-</td>
-                            </tr>
-                            <tr>
-                                <th>Work Experience</th>
-                                <td id="valExp">-</td>
-                            </tr>
-                            <tr>
-                                <th>SEED Registered Email</th>
-                                <td id="valEmail">-</td>
-                            </tr>
-                            <tr>
-                                <th>Positions</th>
-                                <td id="valPosisi">-</td>
-                            </tr>
-                            <tr>
-                                <th>RH</th>
-                                <td id="valRh">-</td>
-                            </tr>
-                            <tr>
-                                <th>AM</th>
-                                <td id="valAm">-</td>
-                            </tr>
-                            <tr>
-                                <th>Type Store</th>
-                                <td id="valType">-</td>
-                            </tr>
-                            <tr>
-                                <th>Trainer HO</th>
-                                <td id="valTrainer">-</td>
-                            </tr>
-                        </table>
                     </div>
 
-                    <input type="hidden" id="store" name="store">
-                    <input type="hidden" id="nama" name="nama">
+                    <!-- Rekap Staff & Galeri Otomatis Mengikuti Toko Karyawan Terpilih -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 id="storeTitleRekap" style="margin: 0; font-size: 15px; color: var(--primary);">📋 Rekap Toko & Galeri Submit</h3>
+                            
+                            <select id="filterBulanStaff" onchange="tampilkanRekapOtomatis()" style="width: 140px; padding: 6px; font-size: 12.5px;">
+                                <option value="">-- Semua Bulan --</option>
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11" selected>November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="foto">Upload Bukti Screenshot Baru (Maks 2 MB):</label>
-                        <input type="file" id="foto" accept="image/*" onchange="tampilkanPreview(event)" required>
-                        <img id="preview-img" src="" alt="Pratinjau Foto">
+                        <div class="rekap-gallery-grid">
+                            <div style="overflow-x: auto;">
+                                <table class="data-table" id="tabelStaffStore">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Staff</th>
+                                        <th>Status</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; color: #64748b;">Silakan pilih nama karyawan di atas.</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div>
+                                <label style="font-size: 11.5px; margin-bottom: 4px; font-weight: 600; color: #475569;">Galeri Submit Toko:</label>
+                                <div class="store-gallery-box" id="storeGalleryContainer">
+                                    <p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Pilih karyawan untuk melihat galeri tokonya.</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
+                </div>
 
-                    <button type="submit" class="btn-submit" id="btnKirim">Kirim ke Google Sheets</button>
-                    <div id="loading">Sedang mengunggah screenshot, mohon tunggu...</div>
-                </form>
+                <!-- KOLOM KANAN: Menu Submit -->
+                <div>
+                    <div class="card">
+                        <h3 style="margin-top: 0; font-size: 16px; color: var(--accent-purple); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📤 Menu Submit</h3>
+                        <form id="uploadForm">
+                            
+                            <input type="hidden" id="store" name="store">
+                            <input type="hidden" id="nama" name="nama">
+
+                            <div class="form-group">
+                                <label for="tanggalSubmit">Pilih Tanggal:</label>
+                                <input type="date" id="tanggalSubmit" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="foto">Upload Screenshot (Maks 2 MB):</label>
+                                <input type="file" id="foto" accept="image/*" onchange="tampilkanPreview(event)" required>
+                                <img id="preview-img" src="" alt="Pratinjau Foto">
+                            </div>
+
+                            <button type="submit" class="btn-submit" id="btnKirim">Submit</button>
+                            <div id="loading">Sedang mengunggah, mohon tunggu...</div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
 
+        <!-- MENU 2: DATA & FILTER KESELURUHAN -->
         <div id="gallery" class="section">
             <div class="card">
-                <h3>Gallery Berdasarkan Store</h3>
-                <div class="form-group">
-                    <label for="filterStore">Pilih Store untuk Melihat Galeri:</label>
-                    <select id="filterStore" onchange="muatGaleriStore()">
-                        <option value="">-- Pilih Store --</option>
+                <h3>Filter Data & Riwayat Submit Keseluruhan</h3>
+                <div class="filter-row" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <select id="filterBulan" onchange="muatDataSubmit()" style="flex: 1; padding: 8px;">
+                        <option value="">-- Semua Bulan --</option>
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Maret</option>
+                        <option value="04">April</option>
+                        <option value="05">Mei</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">Agustus</option>
+                        <option value="09">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11" selected>November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                    <select id="filterTahun" onchange="muatDataSubmit()" style="flex: 1; padding: 8px;">
+                        <option value="">-- Semua Tahun --</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
                     </select>
                 </div>
 
-                <div id="galleryContainer" class="gallery-grid">
-                    <p style="grid-column: 1 / -1; text-align: center; color: #64748b; padding: 20px;">
-                        Silakan pilih store di atas untuk menampilkan galeri screenshot.
-                    </p>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="tabelRiwayatSubmit">
+                        <tr>
+                            <th>Waktu Submit</th>
+                            <th>Nama Sales</th>
+                            <th>Store</th>
+                            <th>Bukti Screenshot</th>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #64748b;">Memuat riwayat data...</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
@@ -297,33 +413,29 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwv0K20pyeCAFibev615qyaU-mnINRjA-ZKMzJzaKdQRMuIaBGKVxlSsAt060O56GG8Jw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxR3EGJ4R7gH1kSYyoXV8p2hjaHiQVt_CkX4sXuULupStfd1Gc7J5VfpbgnbKVK836iJQ/exec";
         let masterData = [];
         let submitHistory = [];
+        let currentStoreAktif = "";
 
         window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggalSubmit').value = today;
+
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(res => {
+                    console.log("Respon Google Sheets:", res);
                     if(res.status === "success") {
-                        masterData = res.data;
+                        masterData = res.data || [];
                         submitHistory = res.submits || [];
-                        setupStoreFilter();
+                        muatDataSubmit();
+                    } else {
+                        console.error("Gagal memuat:", res.message);
                     }
                 })
-                .catch(err => console.error("Gagal memuat data:", err));
+                .catch(err => console.error("Gagal terhubung ke Web App:", err));
         };
-
-        function setupStoreFilter() {
-            const stores = [...new Set(masterData.map(row => row[1]))].filter(Boolean);
-            const filterSelect = document.getElementById('filterStore');
-            stores.forEach(st => {
-                let opt = document.createElement('option');
-                opt.value = st;
-                opt.textContent = st;
-                filterSelect.appendChild(opt);
-            });
-        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -332,25 +444,100 @@
             event.currentTarget.classList.add('active');
         }
 
-        function cekStatusSubmit(namaSales) {
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const tanggalHariIni = `${dd}/${mm}/${yyyy}`;
+        function tampilkanRekapOtomatis() {
+            if (!currentStoreAktif) return;
 
-            const found = submitHistory.find(row => {
-                const waktuSubmit = String(row[0] || "");
-                const namaDiSheet = String(row[1] || "").trim().toLowerCase();
-                return waktuSubmit.includes(tanggalHariIni) && namaDiSheet === namaSales.trim().toLowerCase();
+            const selectedStoreFull = currentStoreAktif.trim();
+            const bulanFilter = document.getElementById('filterBulanStaff').value;
+            const tabel = document.getElementById('tabelStaffStore');
+            const galleryBox = document.getElementById('storeGalleryContainer');
+            const titleHeader = document.getElementById('storeTitleRekap');
+
+            titleHeader.textContent = `📋 Rekap Toko: ${selectedStoreFull}`;
+
+            // 1. Ambil staff berdasarkan store dari Master Karyawan
+            const staffList = masterData.filter(row => String(row[1] || "").trim() === selectedStoreFull);
+
+            // 2. Filter riwayat submit berdasarkan Nama Store (Kolom C / Index 2) & Bulan
+            const storeSubmits = submitHistory.filter(row => {
+                const waktu = String(row[0] || "").trim(); // Index 0: Timestamp
+                const namaStoreSheet = String(row[2] || "").trim(); // Index 2: Nama Store
+
+                if (namaStoreSheet !== selectedStoreFull) return false;
+
+                if (bulanFilter) {
+                    let matchBulan = false;
+                    if (waktu.includes('/')) {
+                        const parts = waktu.split(' ')[0].split('/');
+                        if (parts[1] === bulanFilter) matchBulan = true;
+                    } else if (waktu.includes('-')) {
+                        const parts = waktu.split(' ')[0].split('-');
+                        if (parts[1] === bulanFilter || parts[0] === bulanFilter) matchBulan = true;
+                    } else {
+                        if (waktu.includes(bulanFilter)) matchBulan = true;
+                    }
+                    if (!matchBulan) return false;
+                }
+                return true;
             });
 
+            // 3. Render Tabel Rekap Staff Toko
+            let html = `<tr><th>No</th><th>Nama Staff</th><th>Status</th></tr>`;
+            if (staffList.length === 0) {
+                html += `<tr><td colspan="3" style="text-align: center; color: #64748b;">Tidak ada staff di toko ini.</td></tr>`;
+            } else {
+                staffList.forEach((row, index) => {
+                    const namaStaffMaster = String(row[2] || "").trim().toLowerCase();
+                    
+                    const sudahSubmit = storeSubmits.some(sub => {
+                        const namaSalesSubmit = String(sub[1] || "").trim().toLowerCase(); // Index 1: Nama Sales
+                        return namaSalesSubmit === namaStaffMaster || namaSalesSubmit.includes(namaStaffMaster) || namaStaffMaster.includes(namaSalesSubmit);
+                    });
+
+                    const badgeHtml = sudahSubmit 
+                        ? `<span class="status-badge sudah">✅ Sudah</span>` 
+                        : `<span class="status-badge belum">⚠️ Belum</span>`;
+
+                    html += `<tr>
+                        <td>${index + 1}</td>
+                        <td>${row[2] || '-'}</td>
+                        <td>${badgeHtml}</td>
+                    </tr>`;
+                });
+            }
+            tabel.innerHTML = html;
+
+            // 4. Render Galeri Samping Toko (Index 3: Bukti Screenshot)
+            let galleryHtml = "";
+            if (storeSubmits.length === 0) {
+                galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 20px;">Belum ada submit pada bulan ini.</p>`;
+            } else {
+                storeSubmits.forEach(row => {
+                    let imgFormula = String(row[3] || "");
+                    let matchUrl = imgFormula.match(/"([^"]+)"/);
+                    if (matchUrl && matchUrl[1]) {
+                        galleryHtml += `
+                            <div class="store-gallery-item">
+                                <img src="${matchUrl[1]}" onclick="openModal('${matchUrl[1]}')">
+                                <p>${row[1]}<br><span style="font-size:9px; color:#94a3b8;">${row[0]}</span></p>
+                            </div>`;
+                    }
+                });
+            }
+            galleryBox.innerHTML = galleryHtml;
+        }
+
+        function cekStatusSubmit(namaSales) {
             const statusCell = document.getElementById('valStatus');
             const buktiCell = document.getElementById('valBukti');
 
+            const found = submitHistory.find(row => {
+                const namaDiSheet = String(row[1] || "").trim().toLowerCase();
+                return namaDiSheet === namaSales.trim().toLowerCase();
+            });
+
             if (found) {
-                statusCell.innerHTML = `<span class="status-badge sudah">✅ Sudah Submit Hari Ini</span>`;
-                
+                statusCell.innerHTML = `<span class="status-badge sudah">✅ Sudah Submit</span>`;
                 let imgFormula = String(row[3] || "");
                 let matchUrl = imgFormula.match(/"([^"]+)"/);
                 if (matchUrl && matchUrl[1]) {
@@ -360,7 +547,7 @@
                     buktiCell.textContent = "Tersimpan";
                 }
             } else {
-                statusCell.innerHTML = `<span class="status-badge belum">⚠️ Belum Submit Hari Ini</span>`;
+                statusCell.innerHTML = `<span class="status-badge belum">⚠️ Belum Submit</span>`;
                 buktiCell.textContent = "-";
             }
         }
@@ -405,6 +592,9 @@
                     document.getElementById('valType').textContent = row[9] || "-";
                     document.getElementById('valTrainer').textContent = row[10] || "-";
 
+                    currentStoreAktif = row[1];
+                    tampilkanRekapOtomatis();
+
                     cekStatusSubmit(row[2]);
                     autocompleteList.innerHTML = "";
                 });
@@ -428,19 +618,15 @@
             
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                const maxBytes = 2 * 1024 * 1024;
-
-                if (file.size > maxBytes) {
-                    alert("Ukuran file terlalu besar! Maksimal adalah 2 MB.");
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Ukuran file terlalu besar! Maksimal 2 MB.");
                     input.value = "";
                     preview.style.display = 'none';
                     base64Data = "";
                     return;
                 }
-
                 fileName = file.name;
                 fileType = file.type;
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
@@ -452,31 +638,27 @@
         }
 
         function openModal(imgSrc) {
-            const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modalImg');
-            modal.style.display = "flex";
-            modalImg.src = imgSrc;
+            document.getElementById('imageModal').style.display = "flex";
+            document.getElementById('modalImg').src = imgSrc;
         }
-
         function closeModal() {
             document.getElementById('imageModal').style.display = "none";
         }
 
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const nama = document.getElementById('nama').value;
             const store = document.getElementById('store').value;
+            const tanggal = document.getElementById('tanggalSubmit').value;
             const btnKirim = document.getElementById('btnKirim');
             const loading = document.getElementById('loading');
 
             if (!nama || !store) {
-                alert("Silakan pilih nama karyawan yang valid dari daftar saran pencarian!");
+                alert("Silakan pilih nama karyawan terlebih dahulu!");
                 return;
             }
-
             if (!base64Data) {
-                alert("Silakan pilih file screenshot terlebih dahulu!");
+                alert("Silakan pilih file screenshot!");
                 return;
             }
 
@@ -486,6 +668,7 @@
             const payload = {
                 nama: nama,
                 store: store,
+                tanggal: tanggal,
                 fileName: fileName,
                 mimeType: fileType,
                 fileData: base64Data
@@ -498,44 +681,74 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                alert("Berhasil! Bukti screenshot telah dikirim ke Google Sheets.");
-                
-                document.getElementById('valStatus').innerHTML = `<span class="status-badge sudah">✅ Sudah Submit Hari Ini</span>`;
+                alert("Berhasil! Data telah dikirim ke Google Sheets.");
+                document.getElementById('valStatus').innerHTML = `<span class="status-badge sudah">✅ Sudah Submit</span>`;
                 const previewSrc = document.getElementById('preview-img').src;
-                document.getElementById('valBukti').innerHTML = `<img src="${previewSrc}" class="proof-thumbnail" onclick="openModal('${previewSrc}')" title="Klik untuk memperbesar">`;
+                document.getElementById('valBukti').innerHTML = `<img src="${previewSrc}" class="proof-thumbnail" onclick="openModal('${previewSrc}')">`;
 
                 this.reset();
                 document.getElementById('preview-img').style.display = 'none';
+                document.getElementById('tanggalSubmit').value = new Date().toISOString().split('T')[0];
                 base64Data = "";
                 loading.style.display = 'none';
                 btnKirim.style.display = 'block';
+
+                tampilkanRekapOtomatis();
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("Terjadi kesalahan saat mengirim data.");
+                alert("Terjadi kesalahan.");
                 loading.style.display = 'none';
                 btnKirim.style.display = 'block';
             });
         });
 
-        function muatGaleriStore() {
-            const storePilihan = document.getElementById('filterStore').value;
-            const container = document.getElementById('galleryContainer');
+        function muatDataSubmit() {
+            const bulanFilter = document.getElementById('filterBulan').value;
+            const tahunFilter = document.getElementById('filterTahun').value;
+            const tabel = document.getElementById('tabelRiwayatSubmit');
 
-            if (!storePilihan) {
-                container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #64748b; padding: 20px;">Silakan pilih store di atas untuk menampilkan galeri screenshot.</p>';
-                return;
+            let filtered = submitHistory.filter(row => {
+                const waktu = String(row[0] || "");
+                if (!waktu) return false;
+                
+                let matchBulan = true;
+                let matchTahun = true;
+
+                if (bulanFilter || tahunFilter) {
+                    if (waktu.includes('/')) {
+                        const parts = waktu.split(' ')[0].split('/');
+                        if (bulanFilter && parts[1] !== bulanFilter) matchBulan = false;
+                        if (tahunFilter && parts[2] !== tahunFilter) matchTahun = false;
+                    } else if (waktu.includes('-')) {
+                        const parts = waktu.split(' ')[0].split('-');
+                        if (tahunFilter && parts[0] !== tahunFilter) matchTahun = false;
+                        if (bulanFilter && parts[1] !== bulanFilter) matchBulan = false;
+                    }
+                }
+                return matchBulan && matchTahun;
+            });
+
+            let html = `<tr><th>Waktu Submit</th><th>Nama Sales</th><th>Store</th><th>Bukti Screenshot</th></tr>`;
+            if (filtered.length === 0) {
+                html += `<tr><td colspan="4" style="text-align: center; color: #64748b;">Tidak ada data pada periode ini.</td></tr>`;
+            } else {
+                filtered.forEach(row => {
+                    let imgFormula = String(row[3] || "");
+                    let matchUrl = imgFormula.match(/"([^"]+)"/);
+                    let thumbHtml = "-";
+                    if (matchUrl && matchUrl[1]) {
+                        thumbHtml = `<img src="${matchUrl[1]}" class="proof-thumbnail" onclick="openModal('${matchUrl[1]}')">`;
+                    }
+                    html += `<tr>
+                        <td>${row[0] || '-'}</td>
+                        <td>${row[1] || '-'}</td>
+                        <td>${row[2] || '-'}</td>
+                        <td>${thumbHtml}</td>
+                    </tr>`;
+                });
             }
-
-            container.innerHTML = `
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400" alt="Screenshot" onclick="openModal(this.src)">
-                    <div class="gallery-info">
-                        <h4>Store: ${storePilihan}</h4>
-                        <p>Status: Sinkronisasi aktif</p>
-                    </div>
-                </div>
-            `;
+            tabel.innerHTML = html;
         }
     </script>
 
