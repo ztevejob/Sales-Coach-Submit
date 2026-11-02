@@ -9,6 +9,8 @@
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
             --accent-purple: #7c3aed;
+            --success-green: #10b981;
+            --pending-orange: #f59e0b;
             --bg-color: #f8fafc;
             --card-bg: #ffffff;
             --text-color: #1e293b;
@@ -24,8 +26,8 @@
         
         .navbar {
             background: var(--card-bg);
-            padding: 12px 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 14px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -33,10 +35,10 @@
             top: 0;
             z-index: 100;
         }
-        .navbar h2 { margin: 0; font-size: 18px; color: var(--primary); }
+        .navbar h2 { margin: 0; font-size: 18px; color: var(--primary); font-weight: 700; }
         .nav-links { display: flex; gap: 8px; }
         .nav-btn {
-            background: none; border: none; padding: 6px 12px; cursor: pointer;
+            background: none; border: none; padding: 6px 14px; cursor: pointer;
             font-weight: 600; color: #64748b; border-radius: 6px; font-size: 13px; transition: all 0.2s;
         }
         .nav-btn.active, .nav-btn:hover { background: var(--primary); color: white; }
@@ -46,44 +48,45 @@
         .section.active { display: block; }
 
         .card {
-            background: var(--card-bg); padding: 20px; border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
+            background: var(--card-bg); padding: 22px; border-radius: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04), 0 2px 4px -1px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
             margin-bottom: 20px;
         }
 
-        /* Tabel Employee Profile */
         .profile-table-container {
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
             margin-bottom: 20px;
             background: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .profile-header {
-            background-color: var(--accent-purple);
+            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
             color: white;
-            padding: 12px 15px;
+            padding: 14px 18px;
             font-weight: bold;
             font-size: 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            letter-spacing: 0.3px;
         }
         .profile-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            font-size: 13px;
+            font-size: 13.5px;
         }
         .profile-table th, .profile-table td {
-            padding: 10px 12px;
+            padding: 11px 15px;
             border-bottom: 1px solid var(--border-color);
             word-break: break-word;
         }
         .profile-table tr:last-child td { border-bottom: none; }
         .profile-table th {
-            width: 40%;
+            width: 38%;
             color: #475569;
             background-color: #f8fafc;
             font-weight: 600;
@@ -93,85 +96,86 @@
             font-weight: 500;
         }
 
-        /* Search Input & Auto-suggestion */
-        .search-input-container {
-            position: relative;
-            width: 100%;
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
+        .status-badge.belum { background-color: #fef3c7; color: #d97706; }
+        .status-badge.sudah { background-color: #d1fae5; color: #059669; }
+
+        .proof-thumbnail {
+            width: 60px; height: 60px; object-fit: cover; border-radius: 6px;
+            border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s;
+        }
+        .proof-thumbnail:hover { transform: scale(1.05); }
+
+        .search-input-container { position: relative; width: 100%; }
         .search-input-container input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-            outline: none;
+            width: 100%; padding: 9px 12px; border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; background: #fff;
         }
         .search-input-container input:focus {
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
 
         .autocomplete-items {
-            position: absolute;
-            border: 1px solid var(--border-color);
-            z-index: 999;
-            top: 100%;
-            left: 0;
-            right: 0;
-            max-height: 200px;
-            overflow-y: auto;
-            background: #fff;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: absolute; border: 1px solid var(--border-color); z-index: 999;
+            top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto;
+            background: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         .autocomplete-items div {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 13px;
+            padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 13px;
         }
         .autocomplete-items div:hover { background-color: #f1f5f9; }
 
-        /* Form Controls */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13.5px; color: #334155; }
         input[type="file"], select {
             width: 100%; padding: 10px; border: 1px solid var(--border-color);
-            border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #fff;
+            border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #fff;
         }
         #preview-img {
-            max-width: 100%; max-height: 200px; display: none; margin-top: 10px;
-            border-radius: 6px; border: 1px solid var(--border-color);
+            max-width: 100%; max-height: 180px; display: none; margin-top: 10px;
+            border-radius: 8px; border: 1px solid var(--border-color);
         }
         .btn-submit {
             background: var(--primary); color: white; border: none; padding: 14px 20px;
-            width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600;
+            width: 100%; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: background 0.2s;
         }
         .btn-submit:hover { background: var(--primary-dark); }
         #loading { display: none; text-align: center; color: #64748b; margin-top: 10px; font-weight: 500; }
 
-        /* Gallery Grid */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
+
         .gallery-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 15px; margin-top: 20px;
         }
         .gallery-item {
             background: white; border: 1px solid var(--border-color);
-            border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border-radius: 10px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .gallery-item img { width: 100%; height: 130px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
         .gallery-info { padding: 10px; }
-        .gallery-info h4 { margin: 0 0 4px 0; font-size: 14px; }
+        .gallery-info h4 { margin: 0 0 4px 0; font-size: 13.5px; font-weight: 600; }
         .gallery-info p { margin: 0; font-size: 11px; color: #64748b; }
 
         @media (max-width: 480px) {
-            .navbar { padding: 10px 15px; }
-            .navbar h2 { font-size: 15px; }
-            .nav-btn { padding: 5px 10px; font-size: 12px; }
-            .container { margin: 10px auto; padding: 0 10px; }
-            .card { padding: 15px; }
-            .profile-table th, .profile-table td { padding: 8px 10px; font-size: 12px; }
+            .navbar { padding: 12px 15px; }
+            .container { margin: 12px auto; padding: 0 10px; }
+            .card { padding: 16px; }
+            .profile-table th, .profile-table td { padding: 9px 12px; font-size: 12.5px; }
         }
     </style>
 </head>
@@ -180,14 +184,13 @@
     <div class="navbar">
         <h2>Sales Coach Activity</h2>
         <div class="nav-links">
-            <button class="nav-btn active" onclick="switchTab('dashboard')">Submit</button>
+            <button class="nav-btn active" onclick="switchTab('dashboard')">Submit & Profil</button>
             <button class="nav-btn" onclick="switchTab('gallery')">Gallery</button>
         </div>
     </div>
 
     <div class="container">
 
-        <!-- MENU 1: SUBMIT & EMPLOYEE PROFILE -->
         <div id="dashboard" class="section active">
             <div class="card">
                 <form id="uploadForm">
@@ -205,6 +208,14 @@
                                         <div id="autocompleteList" class="autocomplete-items"></div>
                                     </div>
                                 </td>
+                            </tr>
+                            <tr>
+                                <th>Status Submit Hari Ini</th>
+                                <td id="valStatus"><span class="status-badge belum">⚠️ Belum Submit</span></td>
+                            </tr>
+                            <tr>
+                                <th>Bukti Screenshot</th>
+                                <td id="valBukti">-</td>
                             </tr>
                             <tr>
                                 <th>Store</th>
@@ -249,7 +260,7 @@
                     <input type="hidden" id="nama" name="nama">
 
                     <div class="form-group">
-                        <label for="foto">Bukti Screenshot (Maks 2 MB):</label>
+                        <label for="foto">Upload Bukti Screenshot Baru (Maks 2 MB):</label>
                         <input type="file" id="foto" accept="image/*" onchange="tampilkanPreview(event)" required>
                         <img id="preview-img" src="" alt="Pratinjau Foto">
                     </div>
@@ -260,7 +271,6 @@
             </div>
         </div>
 
-        <!-- MENU 2: GALLERY -->
         <div id="gallery" class="section">
             <div class="card">
                 <h3>Gallery Berdasarkan Store</h3>
@@ -281,9 +291,15 @@
 
     </div>
 
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="modal-close">&times;</span>
+        <img id="modalImg" src="">
+    </div>
+
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby2VIF5YAzBFFMBRnieRoGKvsOIbT06lVhmEL3E6jSRM8RbMQa5Z8hocLpmIS2sPvetTw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwv0K20pyeCAFibev615qyaU-mnINRjA-ZKMzJzaKdQRMuIaBGKVxlSsAt060O56GG8Jw/exec";
         let masterData = [];
+        let submitHistory = [];
 
         window.onload = function() {
             fetch(WEB_APP_URL)
@@ -291,12 +307,11 @@
                 .then(res => {
                     if(res.status === "success") {
                         masterData = res.data;
+                        submitHistory = res.submits || [];
                         setupStoreFilter();
-                    } else {
-                        console.error("Gagal memuat data master:", res.message);
                     }
                 })
-                .catch(err => console.error("Error koneksi:", err));
+                .catch(err => console.error("Gagal memuat data:", err));
         };
 
         function setupStoreFilter() {
@@ -317,7 +332,39 @@
             event.currentTarget.classList.add('active');
         }
 
-        // Logika Auto-suggestion yang diperbaiki
+        function cekStatusSubmit(namaSales) {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const tanggalHariIni = `${dd}/${mm}/${yyyy}`;
+
+            const found = submitHistory.find(row => {
+                const waktuSubmit = String(row[0] || "");
+                const namaDiSheet = String(row[1] || "").trim().toLowerCase();
+                return waktuSubmit.includes(tanggalHariIni) && namaDiSheet === namaSales.trim().toLowerCase();
+            });
+
+            const statusCell = document.getElementById('valStatus');
+            const buktiCell = document.getElementById('valBukti');
+
+            if (found) {
+                statusCell.innerHTML = `<span class="status-badge sudah">✅ Sudah Submit Hari Ini</span>`;
+                
+                let imgFormula = String(row[3] || "");
+                let matchUrl = imgFormula.match(/"([^"]+)"/);
+                if (matchUrl && matchUrl[1]) {
+                    let imgUrl = matchUrl[1];
+                    buktiCell.innerHTML = `<img src="${imgUrl}" class="proof-thumbnail" onclick="openModal('${imgUrl}')" title="Klik untuk memperbesar">`;
+                } else {
+                    buktiCell.textContent = "Tersimpan";
+                }
+            } else {
+                statusCell.innerHTML = `<span class="status-badge belum">⚠️ Belum Submit Hari Ini</span>`;
+                buktiCell.textContent = "-";
+            }
+        }
+
         const searchInput = document.getElementById('searchNama');
         const autocompleteList = document.getElementById('autocompleteList');
 
@@ -326,7 +373,6 @@
             autocompleteList.innerHTML = "";
             if (!val) return;
 
-            // Pencarian mencocokkan Nama Karyawan (Indeks 2)
             const filtered = masterData.filter(row => {
                 const namaKaryawan = String(row[2] || "").toLowerCase();
                 return namaKaryawan.includes(val);
@@ -349,7 +395,6 @@
                     document.getElementById('nama').value = row[2];
                     document.getElementById('store').value = row[1];
 
-                    // Pemetaan indeks sesuai Master Karyawan Google Sheets
                     document.getElementById('valStore').textContent = row[1] || "-";
                     document.getElementById('valNik').textContent = row[3] || "-";
                     document.getElementById('valExp').textContent = row[4] || "-";
@@ -360,6 +405,7 @@
                     document.getElementById('valType').textContent = row[9] || "-";
                     document.getElementById('valTrainer').textContent = row[10] || "-";
 
+                    cekStatusSubmit(row[2]);
                     autocompleteList.innerHTML = "";
                 });
                 autocompleteList.appendChild(item);
@@ -382,7 +428,7 @@
             
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                const maxBytes = 2 * 1024 * 1024; // 2 MB
+                const maxBytes = 2 * 1024 * 1024;
 
                 if (file.size > maxBytes) {
                     alert("Ukuran file terlalu besar! Maksimal adalah 2 MB.");
@@ -403,6 +449,17 @@
                 }
                 reader.readAsDataURL(file);
             }
+        }
+
+        function openModal(imgSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            modal.style.display = "flex";
+            modalImg.src = imgSrc;
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
         }
 
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
@@ -442,16 +499,12 @@
             })
             .then(() => {
                 alert("Berhasil! Bukti screenshot telah dikirim ke Google Sheets.");
+                
+                document.getElementById('valStatus').innerHTML = `<span class="status-badge sudah">✅ Sudah Submit Hari Ini</span>`;
+                const previewSrc = document.getElementById('preview-img').src;
+                document.getElementById('valBukti').innerHTML = `<img src="${previewSrc}" class="proof-thumbnail" onclick="openModal('${previewSrc}')" title="Klik untuk memperbesar">`;
+
                 this.reset();
-                document.getElementById('valStore').textContent = "-";
-                document.getElementById('valNik').textContent = "-";
-                document.getElementById('valExp').textContent = "-";
-                document.getElementById('valEmail').textContent = "-";
-                document.getElementById('valPosisi').textContent = "-";
-                document.getElementById('valRh').textContent = "-";
-                document.getElementById('valAm').textContent = "-";
-                document.getElementById('valType').textContent = "-";
-                document.getElementById('valTrainer').textContent = "-";
                 document.getElementById('preview-img').style.display = 'none';
                 base64Data = "";
                 loading.style.display = 'none';
@@ -476,7 +529,7 @@
 
             container.innerHTML = `
                 <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400" alt="Screenshot">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400" alt="Screenshot" onclick="openModal(this.src)">
                     <div class="gallery-info">
                         <h4>Store: ${storePilihan}</h4>
                         <p>Status: Sinkronisasi aktif</p>
