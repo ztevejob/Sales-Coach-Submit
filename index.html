@@ -22,7 +22,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Navbar Responsif */
         .navbar {
             background: var(--card-bg);
             padding: 12px 20px;
@@ -42,7 +41,6 @@
         }
         .nav-btn.active, .nav-btn:hover { background: var(--primary); color: white; }
 
-        /* Container Mobile Friendly */
         .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
         .section { display: none; }
         .section.active { display: block; }
@@ -53,7 +51,7 @@
             margin-bottom: 20px;
         }
 
-        /* Tabel Employee Profile Responsif untuk HP */
+        /* Tabel Employee Profile */
         .profile-table-container {
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -117,15 +115,15 @@
         .autocomplete-items {
             position: absolute;
             border: 1px solid var(--border-color);
-            z-index: 99;
+            z-index: 999;
             top: 100%;
             left: 0;
             right: 0;
-            max-height: 180px;
+            max-height: 200px;
             overflow-y: auto;
             background: #fff;
             border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .autocomplete-items div {
             padding: 10px;
@@ -135,7 +133,7 @@
         }
         .autocomplete-items div:hover { background-color: #f1f5f9; }
 
-        /* Form Controls Umum */
+        /* Form Controls */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
         input[type="file"], select {
@@ -153,7 +151,7 @@
         .btn-submit:hover { background: var(--primary-dark); }
         #loading { display: none; text-align: center; color: #64748b; margin-top: 10px; font-weight: 500; }
 
-        /* Gallery Grid Responsif */
+        /* Gallery Grid */
         .gallery-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 15px; margin-top: 20px;
@@ -167,7 +165,6 @@
         .gallery-info h4 { margin: 0 0 4px 0; font-size: 14px; }
         .gallery-info p { margin: 0; font-size: 11px; color: #64748b; }
 
-        /* Penyesuaian khusus layar sangat kecil (iPhone SE / Android kecil) */
         @media (max-width: 480px) {
             .navbar { padding: 10px 15px; }
             .navbar h2 { font-size: 15px; }
@@ -181,7 +178,7 @@
 <body>
 
     <div class="navbar">
-        <h2>Sales Coach</h2>
+        <h2>Sales Coach Activity</h2>
         <div class="nav-links">
             <button class="nav-btn active" onclick="switchTab('dashboard')">Submit</button>
             <button class="nav-btn" onclick="switchTab('gallery')">Gallery</button>
@@ -195,7 +192,6 @@
             <div class="card">
                 <form id="uploadForm">
                     
-                    <!-- Tabel Employee Profile -->
                     <div class="profile-table-container">
                         <div class="profile-header">
                             <span>👤 EMPLOYEE PROFILE</span>
@@ -249,7 +245,6 @@
                         </table>
                     </div>
 
-                    <!-- Hidden input untuk pengiriman data ke Apps Script -->
                     <input type="hidden" id="store" name="store">
                     <input type="hidden" id="nama" name="nama">
 
@@ -297,9 +292,11 @@
                     if(res.status === "success") {
                         masterData = res.data;
                         setupStoreFilter();
+                    } else {
+                        console.error("Gagal memuat data master:", res.message);
                     }
                 })
-                .catch(err => console.error("Gagal memuat master data:", err));
+                .catch(err => console.error("Error koneksi:", err));
         };
 
         function setupStoreFilter() {
@@ -320,19 +317,28 @@
             event.currentTarget.classList.add('active');
         }
 
-        // Logika Auto-suggestion
+        // Logika Auto-suggestion yang diperbaiki
         const searchInput = document.getElementById('searchNama');
         const autocompleteList = document.getElementById('autocompleteList');
 
         searchInput.addEventListener('input', function() {
-            const val = this.value.toLowerCase();
+            const val = this.value.trim().toLowerCase();
             autocompleteList.innerHTML = "";
             if (!val) return;
 
+            // Pencarian mencocokkan Nama Karyawan (Indeks 2)
             const filtered = masterData.filter(row => {
                 const namaKaryawan = String(row[2] || "").toLowerCase();
                 return namaKaryawan.includes(val);
             });
+
+            if (filtered.length === 0) {
+                const noItem = document.createElement('div');
+                noItem.textContent = "Nama tidak ditemukan";
+                noItem.style.color = "#94a3b8";
+                autocompleteList.appendChild(noItem);
+                return;
+            }
 
             filtered.forEach(row => {
                 const item = document.createElement('div');
@@ -343,6 +349,7 @@
                     document.getElementById('nama').value = row[2];
                     document.getElementById('store').value = row[1];
 
+                    // Pemetaan indeks sesuai Master Karyawan Google Sheets
                     document.getElementById('valStore').textContent = row[1] || "-";
                     document.getElementById('valNik').textContent = row[3] || "-";
                     document.getElementById('valExp').textContent = row[4] || "-";
@@ -407,7 +414,7 @@
             const loading = document.getElementById('loading');
 
             if (!nama || !store) {
-                alert("Silakan pilih nama karyawan dari daftar auto-suggestion yang muncul!");
+                alert("Silakan pilih nama karyawan yang valid dari daftar saran pencarian!");
                 return;
             }
 
