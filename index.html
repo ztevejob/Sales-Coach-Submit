@@ -413,7 +413,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz1b2_iQ_nIf2kcZS6WlLT6xNx6sIp9cvh-rBC652O31wKltecoOWSQN5nJm_iNMt9TmQ/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwiwhq6ETUShA__ejR8V-UAp3rDc1_QWFmdN2owpgJOQUerdfaOW_APyy7ygmgJZtWs/exec";
         let masterData = [];
         let submitHistory = [];
         let currentStoreAktif = "";
@@ -441,6 +441,25 @@
             event.currentTarget.classList.add('active');
         }
 
+        // Fungsi bantu universal untuk mengambil URL bersih dari Kolom D (=IMAGE("URL"))
+        function extractImageUrl(cellValue) {
+            let val = String(cellValue || "").trim();
+            if (!val) return "";
+            
+            // Jika langsung berupa URL http/https
+            if (val.startsWith("http://") || val.startsWith("https://")) {
+                return val;
+            }
+
+            // Jika berbentuk formula =IMAGE("URL")
+            let match = val.match(/"([^"]+)"/);
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            return "";
+        }
+
         function tampilkanRekapOtomatis() {
             if (!currentStoreAktif) return;
 
@@ -462,7 +481,7 @@
                     const staffList = masterData.filter(row => String(row[1] || "").trim().toLowerCase() === selectedStoreFull.toLowerCase());
                     const daftarNamaStaffToko = staffList.map(row => String(row[2] || "").trim().toLowerCase());
 
-                    // 2. Filter riwayat submit berdasarkan staff toko (tanpa batasan bulan agar foto pasti tampil)
+                    // 2. Filter riwayat submit berdasarkan staff toko
                     let storeSubmits = submitHistory.filter(row => {
                         const namaSalesSubmit = String(row[1] || "").trim().toLowerCase();
                         const namaStoreSheet = String(row[2] || "").trim().toLowerCase();
@@ -508,18 +527,9 @@
                         galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Belum ada foto submit.</p>`;
                     } else {
                         storeSubmits.forEach(row => {
-                            let cellValue = String(row[3] || "").trim();
-                            let imageUrl = "";
+                            let imageUrl = extractImageUrl(row[3]); // Kolom D (index 3)
 
-                            let firstQuote = cellValue.indexOf('"');
-                            let lastQuote = cellValue.lastIndexOf('"');
-                            if (firstQuote !== -1 && lastQuote !== -1 && lastQuote > firstQuote) {
-                                imageUrl = cellValue.substring(firstQuote + 1, lastQuote);
-                            } else if (cellValue.startsWith("http://") || cellValue.startsWith("https://")) {
-                                imageUrl = cellValue;
-                            }
-
-                            if (imageUrl && imageUrl.startsWith("http")) {
+                            if (imageUrl) {
                                 galleryHtml += `
                                     <div class="store-gallery-item">
                                         <img src="${imageUrl}" onclick="openModal('${imageUrl}')">
@@ -548,18 +558,9 @@
 
             if (found) {
                 statusCell.innerHTML = `<span class="status-badge sudah">✅ Sudah Submit</span>`;
-                let cellValue = String(found[3] || "").trim();
-                let imgUrl = "";
+                let imgUrl = extractImageUrl(found[3]); // Kolom D (index 3)
 
-                let firstQuote = cellValue.indexOf('"');
-                let lastQuote = cellValue.lastIndexOf('"');
-                if (firstQuote !== -1 && lastQuote !== -1 && lastQuote > firstQuote) {
-                    imgUrl = cellValue.substring(firstQuote + 1, lastQuote);
-                } else if (cellValue.startsWith("http://") || cellValue.startsWith("https://")) {
-                    imgUrl = cellValue;
-                }
-
-                if (imgUrl && imgUrl.startsWith("http")) {
+                if (imgUrl) {
                     buktiCell.innerHTML = `<img src="${imgUrl}" class="proof-thumbnail" onclick="openModal('${imgUrl}')" title="Klik untuk memperbesar">`;
                 } else {
                     buktiCell.textContent = "Tersimpan";
@@ -752,18 +753,10 @@
                 html += `<tr><td colspan="4" style="text-align: center; color: #64748b;">Tidak ada data pada periode ini.</td></tr>`;
             } else {
                 filtered.forEach(row => {
-                    let cellValue = String(row[3] || "").trim();
-                    let imgUrl = "";
-                    let firstQuote = cellValue.indexOf('"');
-                    let lastQuote = cellValue.lastIndexOf('"');
-                    if (firstQuote !== -1 && lastQuote !== -1 && lastQuote > firstQuote) {
-                        imgUrl = cellValue.substring(firstQuote + 1, lastQuote);
-                    } else if (cellValue.startsWith("http://") || cellValue.startsWith("https://")) {
-                        imgUrl = cellValue;
-                    }
-
+                    let imgUrl = extractImageUrl(row[3]); // Kolom D (index 3)
                     let thumbHtml = "-";
-                    if (imgUrl && imgUrl.startsWith("http")) {
+                    
+                    if (imgUrl) {
                         thumbHtml = `<img src="${imgUrl}" class="proof-thumbnail" onclick="openModal('${imgUrl}')">`;
                     }
                     html += `<tr>
