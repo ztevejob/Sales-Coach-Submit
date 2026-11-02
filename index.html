@@ -514,7 +514,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGjIKfUWMufBn3qFTiOlJPnn2p7P7GudE07PfI4RQJqEmNKZcg1nJ7yhz0R4XbRwRN6Q/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMkhSGX8Z39ib-EvyAbO3KNCmx5AMJkIniqKGuOht6OshI5Rxan6Ua0wxgBJuMcV0BQw/exec";
         let masterData = [];
         let submitHistory = [];
         let donutChartInstance = null;
@@ -556,6 +556,13 @@
                         populateTrainerDropdown();
                         muatRekapNasional();
                         updateSummaryDashboard();
+                        
+                        // Jika nama sudah terisi sebelumnya, validasi ulang status submit-nya secara akurat
+                        const currentNameInput = document.getElementById('searchNama').value.trim();
+                        if (currentNameInput) {
+                            cekStatusSubmit(currentNameInput);
+                        }
+
                         syncStatus.textContent = "🟢 Connected";
                         syncStatus.style.color = "#10b981";
                     } else {
@@ -629,9 +636,11 @@
             const btnKirim = document.getElementById('btnKirim');
             const infoPerubahan = document.getElementById('infoPerubahan');
 
+            const cleanTargetName = namaSales.trim().toLowerCase();
+
             const found = submitHistory.find(row => {
                 const namaDiSheet = String(row[1] || "").trim().toLowerCase();
-                return namaDiSheet === namaSales.trim().toLowerCase();
+                return namaDiSheet === cleanTargetName;
             });
 
             if (found) {
@@ -667,7 +676,24 @@
         searchInput.addEventListener('input', function() {
             const val = this.value.trim().toLowerCase();
             autocompleteList.innerHTML = "";
-            if (!val) return;
+            
+            // Jika input dikosongkan, reset form profil
+            if (!val) {
+                document.getElementById('nama').value = "";
+                document.getElementById('store').value = "";
+                document.getElementById('valStore').textContent = "-";
+                document.getElementById('valNik').textContent = "-";
+                document.getElementById('valExp').textContent = "-";
+                document.getElementById('valEmail').textContent = "-";
+                document.getElementById('valPosisi').textContent = "-";
+                document.getElementById('valRh').textContent = "-";
+                document.getElementById('valAm').textContent = "-";
+                document.getElementById('valType').textContent = "-";
+                document.getElementById('valTrainer').textContent = "-";
+                document.getElementById('valStatus').innerHTML = `<span class="status-badge belum">⚠️ Belum Submit</span>`;
+                document.getElementById('valBukti').textContent = "-";
+                return;
+            }
 
             const filtered = masterData.filter(row => {
                 const namaKaryawan = String(row[2] || "").toLowerCase();
@@ -676,7 +702,7 @@
 
             if (filtered.length === 0) {
                 const noItem = document.createElement('div');
-                noItem.textContent = "Nama tidak ditemukan";
+                noItem.textContent = "Nama tidak ditemukan dalam database";
                 noItem.style.color = "#94a3b8";
                 autocompleteList.appendChild(noItem);
                 return;
@@ -753,18 +779,24 @@
 
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const nama = document.getElementById('nama').value;
-            const store = document.getElementById('store').value;
+            const typedNameInput = document.getElementById('searchNama').value.trim();
+            const nama = document.getElementById('nama').value.trim();
+            const store = document.getElementById('store').value.trim();
             const tanggal = document.getElementById('tanggalSubmit').value;
             const btnKirim = document.getElementById('btnKirim');
             const loading = document.getElementById('loading');
 
-            if (!nama || !store) {
-                alert("Silakan pilih nama karyawan terlebih dahulu!");
+            // Validasi Ketat: Cek apakah nama diketik lengkap dan terdaftar secara persis di masterData
+            const cleanTypedName = typedNameInput.toLowerCase();
+            const isValidMaster = masterData.some(row => String(row[2] || "").trim().toLowerCase() === cleanTypedName);
+
+            if (!typedNameInput || !nama || !store || !isValidMaster) {
+                alert("⚠️ Peringatan: Nama karyawan belum dipilih atau penulisan nama kurang lengkap / tidak terdaftar di database master. Silakan pilih dari daftar otomatis.");
                 return;
             }
+
             if (!base64Data) {
-                alert("Silakan pilih file screenshot!");
+                alert("Silakan pilih file screenshot bukti terlebih dahulu!");
                 return;
             }
 
@@ -792,11 +824,11 @@
 
             const sudahPernahSubmit = submitHistory.some(row => {
                 const namaDiSheet = String(row[1] || "").trim().toLowerCase();
-                return namaDiSheet === nama.trim().toLowerCase();
+                return namaDiSheet === cleanTypedName;
             });
 
             if (sudahPernahSubmit) {
-                alert(`Staff atas nama "${nama}" sudah tercatat melakukan submit. Jika ingin melakukan perubahan, silakan hubungi trainer untuk perbaikan.`);
+                alert(`Staff atas nama "${typedNameInput}" sudah tercatat melakukan submit. Jika ingin melakukan perubahan, silakan hubungi trainer untuk perbaikan.`);
                 loading.style.display = 'none';
                 btnKirim.style.display = 'block';
                 return;
@@ -806,7 +838,7 @@
             loading.style.display = 'block';
 
             const payload = {
-                nama: nama,
+                nama: typedNameInput,
                 store: store,
                 tanggal: tanggal,
                 fileName: fileName,
@@ -836,7 +868,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("Terjadi kesalahan.");
+                alert("Terjadi kesalahan koneksi saat mengirim data.");
                 loading.style.display = 'none';
                 btnKirim.style.display = 'block';
             });
