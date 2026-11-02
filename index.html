@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sales Coach Activity</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -22,11 +23,12 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
+            font-size: 14px;
         }
         
         .navbar {
             background: var(--card-bg);
-            padding: 14px 20px;
+            padding: 12px 15px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
@@ -35,37 +37,31 @@
             top: 0;
             z-index: 100;
         }
-        .navbar h2 { margin: 0; font-size: 18px; color: var(--primary); font-weight: 700; }
-        .nav-links { display: flex; gap: 8px; }
+        .navbar h2 { margin: 0; font-size: 16px; color: var(--primary); font-weight: 700; }
+        .nav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         .nav-btn {
-            background: none; border: none; padding: 6px 14px; cursor: pointer;
-            font-weight: 600; color: #64748b; border-radius: 6px; font-size: 13px; transition: all 0.2s;
+            background: none; border: none; padding: 6px 10px; cursor: pointer;
+            font-weight: 600; color: #64748b; border-radius: 6px; font-size: 12px; transition: all 0.2s;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
         }
         .nav-btn.active, .nav-btn:hover { background: var(--primary); color: white; }
 
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 1200px; margin: 15px auto; padding: 0 10px; }
         .section { display: none; }
         .section.active { display: block; }
 
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 380px;
-            gap: 20px;
-            align-items: start;
-        }
-
-        .rekap-gallery-grid {
-            display: grid;
-            grid-template-columns: 1.4fr 1fr;
             gap: 15px;
             align-items: start;
         }
 
         .card {
-            background: var(--card-bg); padding: 22px; border-radius: 14px;
+            background: var(--card-bg); padding: 18px; border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04), 0 2px 4px -1px rgba(0,0,0,0.02);
             border: 1px solid var(--border-color);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .profile-table-container {
@@ -78,22 +74,21 @@
         .profile-header {
             background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
             color: white;
-            padding: 14px 18px;
+            padding: 12px 15px;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            letter-spacing: 0.3px;
         }
         .profile-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            font-size: 13.5px;
+            font-size: 13px;
         }
         .profile-table th, .profile-table td {
-            padding: 11px 15px;
+            padding: 10px 12px;
             border-bottom: 1px solid var(--border-color);
             word-break: break-word;
         }
@@ -122,15 +117,15 @@
         .status-badge.sudah { background-color: #d1fae5; color: #059669; }
 
         .proof-thumbnail {
-            width: 50px; height: 50px; object-fit: cover; border-radius: 6px;
+            width: 45px; height: 45px; object-fit: cover; border-radius: 6px;
             border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s;
         }
         .proof-thumbnail:hover { transform: scale(1.05); }
 
         .search-input-container { position: relative; width: 100%; }
         .search-input-container input {
-            width: 100%; padding: 9px 12px; border: 1px solid var(--border-color);
-            border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none; background: #fff;
+            width: 100%; padding: 8px 10px; border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 13.5px; box-sizing: border-box; outline: none; background: #fff;
         }
         .search-input-container input:focus {
             border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
@@ -138,31 +133,31 @@
 
         .autocomplete-items {
             position: absolute; border: 1px solid var(--border-color); z-index: 999;
-            top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto;
+            top: 100%; left: 0; right: 0; max-height: 180px; overflow-y: auto;
             background: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         .autocomplete-items div {
-            padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 13px;
+            padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 12.5px;
         }
         .autocomplete-items div:hover { background-color: #f1f5f9; }
 
-        .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13.5px; color: #334155; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #334155; }
         input[type="file"], input[type="date"], select {
-            width: 100%; padding: 10px; border: 1px solid var(--border-color);
-            border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #fff;
+            width: 100%; padding: 9px; border: 1px solid var(--border-color);
+            border-radius: 8px; box-sizing: border-box; font-size: 13.5px; background: #fff;
         }
         #preview-img {
-            max-width: 100%; max-height: 160px; display: none; margin-top: 10px;
+            max-width: 100%; max-height: 150px; display: none; margin-top: 8px;
             border-radius: 8px; border: 1px solid var(--border-color);
         }
         .btn-submit {
-            background: var(--primary); color: white; border: none; padding: 14px 20px;
-            width: 100%; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600;
+            background: var(--primary); color: white; border: none; padding: 12px 18px;
+            width: 100%; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: background 0.2s;
         }
         .btn-submit:hover { background: var(--primary-dark); }
-        #loading { display: none; text-align: center; color: #64748b; margin-top: 10px; font-weight: 500; }
+        #loading { display: none; text-align: center; color: #64748b; margin-top: 8px; font-weight: 500; font-size: 13px; }
 
         .data-table {
             width: 100%; border-collapse: collapse; font-size: 12px;
@@ -172,35 +167,28 @@
         }
         .data-table th { background-color: #f1f5f9; color: #334155; font-weight: 600; }
 
-        .store-gallery-box {
-            background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;
-            max-height: 380px; overflow-y: auto;
+        .summary-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
         }
-        .store-gallery-item {
-            background: white; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; overflow: hidden;
-            text-align: center; padding: 6px;
+        .stat-card {
+            background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: center;
         }
-        .store-gallery-item img {
-            width: 100%; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer;
-        }
-        .store-gallery-item p { margin: 4px 0 0 0; font-size: 10.5px; color: #64748b; font-weight: 600; }
+        .stat-card h4 { margin: 0 0 6px 0; font-size: 12px; color: #64748b; font-weight: 600; }
+        .stat-card .val { font-size: 20px; font-weight: 700; color: var(--primary); }
 
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+            background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;
         }
         .modal img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
+        .modal-close { position: absolute; top: 15px; right: 20px; color: white; font-size: 32px; font-weight: bold; cursor: pointer; }
 
         @media (max-width: 1024px) {
             .dashboard-grid { grid-template-columns: 1fr; }
-            .rekap-gallery-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 480px) {
-            .navbar { padding: 12px 15px; }
-            .container { margin: 12px auto; padding: 0 10px; }
-            .card { padding: 16px; }
-            .profile-table th, .profile-table td { padding: 9px 12px; font-size: 12.5px; }
         }
     </style>
 </head>
@@ -209,20 +197,23 @@
     <div class="navbar">
         <h2>Sales Coach Activity</h2>
         <div class="nav-links">
-            <button class="nav-btn active" onclick="switchTab('dashboard')">Submit & Profil</button>
-            <button class="nav-btn" onclick="switchTab('gallery')">Data & Rekap</button>
+            <button class="nav-btn active" onclick="switchTab('dashboard')">Submit</button>
+            <button class="nav-btn" onclick="switchTab('rekapToko')">📋 Rekap</button>
+            <button class="nav-btn" onclick="switchTab('summaryTab')">📊 Summary</button>
+            <a href="https://docs.google.com/spreadsheets/d/1WhYyHN8gu6QFtoeGVzDpgGQfuv3B74Bc894oFCwrJ_8/edit?usp=sharing" target="_blank" class="nav-btn" style="background: #fef2f2; color: #dc2626;">🔗 Request Nonaktifkan Akun</a>
+            <button class="nav-btn" onclick="promptAdminPin()" title="Admin Settings" style="background: #f1f5f9; color: #475569;">⚙️ Admin</button>
         </div>
     </div>
 
     <div class="container">
 
-        <!-- MENU 1: DASHBOARD -->
+        <!-- MENU 1: DASHBOARD (Submit & Profil) -->
         <div id="dashboard" class="section active">
             <div class="dashboard-grid">
                 
                 <!-- KOLOM KIRI -->
                 <div>
-                    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 20px;">
+                    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 15px;">
                         <div class="profile-table-container">
                             <div class="profile-header">
                                 <span>👤 EMPLOYEE PROFILE</span>
@@ -284,60 +275,13 @@
                             </table>
                         </div>
                     </div>
-
-                    <!-- Rekap Staff & Galeri Otomatis Mengikuti Toko Karyawan Terpilih -->
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <h3 id="storeTitleRekap" style="margin: 0; font-size: 15px; color: var(--primary);">📋 Rekap Toko & Galeri Submit</h3>
-                            
-                            <select id="filterBulanStaff" onchange="tampilkanRekapOtomatis()" style="width: 140px; padding: 6px; font-size: 12.5px;">
-                                <option value="">-- Semua Bulan --</option>
-                                <option value="01">Januari</option>
-                                <option value="02">Februari</option>
-                                <option value="03">Maret</option>
-                                <option value="04">April</option>
-                                <option value="05">Mei</option>
-                                <option value="06">Juni</option>
-                                <option value="07">Juli</option>
-                                <option value="08">Agustus</option>
-                                <option value="09">September</option>
-                                <option value="10">Oktober</option>
-                                <option value="11" selected>November</option>
-                                <option value="12">Desember</option>
-                            </select>
-                        </div>
-
-                        <div class="rekap-gallery-grid">
-                            <div style="overflow-x: auto;">
-                                <table class="data-table" id="tabelStaffStore">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama Staff</th>
-                                        <th>Status</th>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="3" style="text-align: center; color: #64748b;">Silakan pilih nama karyawan di atas.</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            
-                            <div>
-                                <label style="font-size: 11.5px; margin-bottom: 4px; font-weight: 600; color: #475569;">Galeri Submit Toko:</label>
-                                <div class="store-gallery-box" id="storeGalleryContainer">
-                                    <p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Pilih karyawan untuk melihat galeri tokonya.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
                 </div>
 
                 <!-- KOLOM KANAN: Menu Submit -->
                 <div>
                     <div class="card">
-                        <h3 style="margin-top: 0; font-size: 16px; color: var(--accent-purple); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📤 Menu Submit</h3>
+                        <h3 style="margin-top: 0; font-size: 15px; color: var(--accent-purple); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">📤 Menu Submit</h3>
                         <form id="uploadForm">
-                            
                             <input type="hidden" id="store" name="store">
                             <input type="hidden" id="nama" name="nama">
 
@@ -354,6 +298,7 @@
 
                             <button type="submit" class="btn-submit" id="btnKirim">Submit</button>
                             <div id="loading">Sedang mengunggah, mohon tunggu...</div>
+                            <div id="infoPerubahan" style="display: none; margin-top: 8px; font-size: 11.5px; color: #d97706; text-align: center; background: #fef3c7; padding: 6px; border-radius: 6px; font-weight: 600;">💡 Jika ingin melakukan perubahan, hubungi trainer untuk perbaikan.</div>
                         </form>
                     </div>
                 </div>
@@ -361,46 +306,83 @@
             </div>
         </div>
 
-        <!-- MENU 2: DATA & FILTER KESELURUHAN -->
-        <div id="gallery" class="section">
+        <!-- MENU 2: REKAP TOKO -->
+        <div id="rekapToko" class="section">
             <div class="card">
-                <h3>Filter Data & Riwayat Submit Keseluruhan</h3>
-                <div class="filter-row" style="display: flex; gap: 8px; margin-bottom: 12px;">
-                    <select id="filterBulan" onchange="muatDataSubmit()" style="flex: 1; padding: 8px;">
-                        <option value="">-- Semua Bulan --</option>
-                        <option value="01">Januari</option>
-                        <option value="02">Februari</option>
-                        <option value="03">Maret</option>
-                        <option value="04">April</option>
-                        <option value="05">Mei</option>
-                        <option value="06">Juni</option>
-                        <option value="07">Juli</option>
-                        <option value="08">Agustus</option>
-                        <option value="09">September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11" selected>November</option>
-                        <option value="12">Desember</option>
-                    </select>
-                    <select id="filterTahun" onchange="muatDataSubmit()" style="flex: 1; padding: 8px;">
-                        <option value="">-- Semua Tahun --</option>
-                        <option value="2025">2025</option>
-                        <option value="2026" selected>2026</option>
-                        <option value="2027">2027</option>
-                    </select>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <h3 style="margin: 0; font-size: 15px; color: var(--primary);">📋 Rekap Toko Nasional (103 Toko)</h3>
+                    
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <select id="filterBulanRekap" onchange="muatRekapNasional()" style="width: 130px; padding: 6px; font-size: 12.5px;">
+                            <option value="">-- Semua Bulan --</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11" selected>November</option>
+                            <option value="12">Desember</option>
+                        </select>
+
+                        <select id="filterNamaTokoRekap" onchange="muatRekapNasional()" style="width: 190px; padding: 6px; font-size: 12.5px;">
+                            <option value="">-- Semua Toko --</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div style="overflow-x: auto;">
-                    <table class="data-table" id="tabelRiwayatSubmit">
+                    <table class="data-table" id="tabelRekapNasional">
                         <tr>
-                            <th>Waktu Submit</th>
-                            <th>Nama Sales</th>
-                            <th>Store</th>
-                            <th>Bukti Screenshot</th>
+                            <th>No</th>
+                            <th>Nama Toko / Store</th>
+                            <th>Total Staff</th>
+                            <th>Sudah</th>
+                            <th>Belum</th>
+                            <th>Progress Bar Gauge</th>
+                            <th>Aksi</th>
                         </tr>
                         <tr>
-                            <td colspan="4" style="text-align: center; color: #64748b;">Memuat riwayat data...</td>
+                            <td colspan="7" style="text-align: center; color: #64748b;">Memuat rekap toko nasional...</td>
                         </tr>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENU 3: SUMMARY & DONUT CHART -->
+        <div id="summaryTab" class="section">
+            <div class="card">
+                <h3 style="margin-top: 0; font-size: 16px; color: var(--primary); margin-bottom: 15px;">📊 Executive Summary</h3>
+
+                <div class="summary-cards-grid">
+                    <div class="stat-card">
+                        <h4>Total Staff</h4>
+                        <div class="val" id="sumTotalStaff">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Sudah Submit</h4>
+                        <div class="val" style="color: var(--success-green);" id="sumSudahSubmit">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Belum Submit</h4>
+                        <div class="val" style="color: var(--pending-orange);" id="sumBelumSubmit">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Progres Selesai</h4>
+                        <div class="val" style="color: var(--accent-purple);" id="sumPercentProgress">0%</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 0; text-align: center;">
+                    <h4 style="margin-top: 0; color: #334155; font-size: 14px;">Grafik Status Submit Nasional</h4>
+                    <div style="max-width: 280px; margin: 0 auto; position: relative;">
+                        <canvas id="statusDonutChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -412,144 +394,113 @@
         <img id="modalImg" src="">
     </div>
 
+    <div id="staffDetailModal" class="modal" onclick="closeStaffModal(event)">
+        <div style="background: white; padding: 20px; border-radius: 12px; max-width: 600px; width: 92%; max-height: 85vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
+            <span class="modal-close" style="color: #334155; top: 12px; right: 18px; font-size: 26px;" onclick="closeStaffModal()">&times;</span>
+            <h3 id="staffModalTitle" style="margin-top: 0; color: var(--primary); font-size: 16px;">👥 Rincian Staff Toko</h3>
+            <div style="overflow-x: auto; margin-top: 12px;">
+                <table class="data-table" id="tabelDetailStaffToko">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Staff</th>
+                        <th>Status</th>
+                        <th>Tanggal Submit</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="modal" onclick="closeAdminModal(event)">
+        <div style="background: white; padding: 20px; border-radius: 12px; max-width: 520px; width: 92%; max-height: 90vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
+            <span class="modal-close" style="color: #334155; top: 12px; right: 18px; font-size: 26px;" onclick="closeAdminModal()">&times;</span>
+            <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">⚙️ Admin & WhatsApp Reminder</h3>
+            
+            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13.5px; color: #334155;">🔒 Kunci Tanggal / Tenggat Waktu</h4>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <input type="date" id="lockDateInput">
+                </div>
+                <button type="button" class="btn-submit" onclick="lockDateAction()" style="background: var(--accent-purple); padding: 8px; font-size: 13px;">Kunci Tanggal Ini</button>
+                <div id="lockedDatesList" style="margin-top: 8px; font-size: 12px; color: #64748b;">Belum ada tanggal terkunci.</div>
+            </div>
+
+            <div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 10px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13.5px; color: #166534;">📱 WhatsApp Reminder All Toko</h4>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="waMessageText">Format Pesan WhatsApp Rekap Nasional:</label>
+                    <textarea id="waMessageText" rows="6" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; box-sizing: border-box; background: #fff;" readonly></textarea>
+                </div>
+                <button type="button" class="btn-submit" onclick="copyWaReminder()" style="background: #22c55e; padding: 10px; font-size: 13px;">📋 Salin Pesan WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGjIKfUWMufBn3qFTiOlJPnn2p7P7GudE07PfI4RQJqEmNKZcg1nJ7yhz0R4XbRwRN6Q/exec";
         let masterData = [];
         let submitHistory = [];
-        let currentStoreAktif = "";
+        let donutChartInstance = null;
+
+        const allStoresList = [
+            "M118 Digimap Pondok Indah Mall 3", "M119 Digimap Centrepoint Mall Medan", "M120 Digimap Sun Plaza Medan", "M121 Digimap Tunjungan Plaza 3 Surabaya", "M122 Digimap Galaxy Mall Surabaya", "M123 Digimap Mall Bali Galeria", "M124 Digimap Pacific Place", "M125 Digimap Supermall Karawaci", "M126 Digimap Ciputra World Surabaya", "M127 Digimap Lotte Shopping Avenue", "M128 Digimap Emporium Mall Pluit", "M129 Digimap Mall Puri Indah", "M130 Digimap Sunset Road Bali", "M131 Digimap Grand Indonesia", "M132 Digimap Plaza Senayan", "M133 Digimap Trans Studio Mall Bandung", "M134 Digimap Beachwalk Bali", "M201 Digimap Trans Studio Mall Cibubur", "M203 Digimap AEON Mall BSD", "M205 Digimap Paskal 23 Bandung", "M206 Digimap Pakuwon Mall Surabaya", "M212 Digimap Sunter Mall", "M214 Digimap AEON Mall Sentul", "M215 Digimap Mall Taman Anggrek", "M216 Digimap Tentrem Mall Semarang", "M217 Digimap Blok M Plaza", "M218 Digimap Plaza Balikpapan", "M219 Digimap Basko Padang", "M21F Digimap Ujung Berung Town Square", "M220 Digimap Malioboro Mall", "M221 Digimap A Yani Pontianak", "M222 Digimap Palembang Indah Mall", "M223 Digimap Roxy Square Jember", "M224 Digimap WTC Jambi", "M225 Digimap Citimall Dumai", "M226 Digimap Ambon City Center", "M227 Digimap AEON Tanjung Barat", "M228 Digimap Citimall Cianjur 2", "M229 Digimap Trans Icon Surabaya", "M230 Digimap The Park Kendari", "M231 Digimap Gress Mall Gresik", "M232 Digimap Pakuwon Mall Solo", "M233 Digimap Unimas District Sidoarjo", "M234 Digimap Citra Grand Cibubur", "M235 Digimap Lippo Plaza Kramat Jati", "M236 Digimap Palu Grand Mall", "M237 Digimap Solo Square", "M238 Digimap Pondok Indah Mall 2", "M239 Digimap Icon Mall Bali", "M240 Digimap Pacific Mall Tegal", "M241 Digimap Revo Mall", "M243 Digimap Aeon Mall Delta Mas", "M244 Digimap Java Mall Semarang", "M245 Digimap Living World Kota Wisata", "M246 Digimap Malang Town Square", "M247 Digimap Lippo Plaza Jambi", "M248 Digimap Suncity Mall Sidoarjo", "M249 Digimap Lippo Plaza Palangkaraya", "M250 Digimap Lippo Plaza Batu", "M251 Digimap The Kings Shopping Centre", "M252 Digimap Binjai Mall", "M253 Digimap Plaza Surabaya", "M254 Digimap Basko city Mall", "M255 Digimap Antasari Place", "M256 Digimap Lippo Plaza Lubuklinggau", "M257 Digimap City Plaza Jatinegara", "M258 Digimap Lippo Plaza Manado", "M259 Digimap Jatinangor Town Square", "M260 Digimap Kudus Extention Mall", "M261 Digimap PIK Elang Laut", "M262 Digimap Suzuya Merdeka Square Siantar", "M263 Digimap Citimall Sampit", "M264 Digimap Plaza Semanggi", "M265 Digimap Merr Street", "M266 Digimap HIVE Harapan Indah", "M267 Digimap Mall Cijantung", "M268 Digimap Diana Mall Timika", "M269 Digimap Tenth Avenue", "M270 Digimap Citimall Lahat", "M271 Digimap Mall Indramayu", "M272 Digimap Kota Baru Parahyangan", "M273 Digimap Metro Lampung", "M274 Digimap Street Ciputat Raya", "M275 Digimap Citimall Baturaja", "M276 Digimap Shila At Sawangan", "M277 Digimap Citimall Tuban", "M278 Digimap A.S.S Brebes", "M279 Digimap Ciumbuleuit", "M281 Digimap Ngaliyan Street", "M282 Digimap Citimall Pangkalan bun", "M283 Digimap Basuki Rahmat Tulungagung", "M284 Digimap BSD Loka", "M285 Digimap Blitar Square", "M286 Digimap Citimall Prabumulih", "M287 Digimap Grand Tarakan", "M288 Digimap Mojopahit Street Mojokerto", "M289 Digimap Maleo Town Square", "M290 Digimap Mandau City Mall", "M292 Digimap Graha Raya", "M293 Digimap Jend Sudirman Salatiga", "M294 Digimap Bojonegoro Street", "M295 Digimap Juanda Tasikmalaya", "M297 Digimap Ponorogo City Center"
+        ];
 
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggalSubmit').value = today;
+
+            populateStoreDropdowns();
 
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(res => {
                     if(res.status === "success") {
                         masterData = res.data || [];
-                        submitHistory = res.submits || [];
-                        muatDataSubmit();
+                        submitHistory = res.submits || res.subdata || [];
+                        muatRekapNasional();
+                        updateSummaryDashboard();
                     }
                 })
                 .catch(err => console.error("Gagal memuat data:", err));
         };
+
+        function populateStoreDropdowns() {
+            const storeSelectRekap = document.getElementById('filterNamaTokoRekap');
+            let optionsHtml = '<option value="">-- Semua Toko --</option>';
+            allStoresList.forEach(store => {
+                optionsHtml += `<option value="${store}">${store}</option>`;
+            });
+            storeSelectRekap.innerHTML = optionsHtml;
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
+
+            if (tabId === 'rekapToko') {
+                muatRekapNasional();
+            } else if (tabId === 'summaryTab') {
+                updateSummaryDashboard();
+            }
         }
 
-        // Fungsi bantu universal untuk mengambil URL bersih dari Kolom D (=IMAGE("URL"))
         function extractImageUrl(cellValue) {
             let val = String(cellValue || "").trim();
             if (!val) return "";
-            
-            // Jika langsung berupa URL http/https
-            if (val.startsWith("http://") || val.startsWith("https://")) {
-                return val;
-            }
-
-            // Jika berbentuk formula =IMAGE("URL")
+            if (val.startsWith("http://") || val.startsWith("https://")) return val;
             let match = val.match(/"([^"]+)"/);
-            if (match && match[1]) {
-                return match[1];
-            }
-
-            return "";
-        }
-
-        function tampilkanRekapOtomatis() {
-            if (!currentStoreAktif) return;
-
-            const selectedStoreFull = currentStoreAktif.trim();
-            const tabel = document.getElementById('tabelStaffStore');
-            const galleryBox = document.getElementById('storeGalleryContainer');
-            const titleHeader = document.getElementById('storeTitleRekap');
-
-            titleHeader.textContent = `📋 Rekap Toko: ${selectedStoreFull}`;
-
-            fetch(WEB_APP_URL)
-                .then(res => res.json())
-                .then(res => {
-                    if (res.status === "success") {
-                        submitHistory = res.submits || [];
-                    }
-
-                    // 1. Ambil staff berdasarkan store dari Master Karyawan
-                    const staffList = masterData.filter(row => String(row[1] || "").trim().toLowerCase() === selectedStoreFull.toLowerCase());
-                    const daftarNamaStaffToko = staffList.map(row => String(row[2] || "").trim().toLowerCase());
-
-                    // 2. Filter riwayat submit berdasarkan staff toko
-                    let storeSubmits = submitHistory.filter(row => {
-                        const namaSalesSubmit = String(row[1] || "").trim().toLowerCase();
-                        const namaStoreSheet = String(row[2] || "").trim().toLowerCase();
-                        const targetStore = selectedStoreFull.toLowerCase();
-
-                        let matchStore = namaStoreSheet === targetStore || namaStoreSheet.includes(targetStore) || targetStore.includes(namaStoreSheet);
-                        let isStaffToko = daftarNamaStaffToko.some(namaStaff => 
-                            namaSalesSubmit === namaStaff || namaSalesSubmit.includes(namaStaff) || namaStaff.includes(namaSalesSubmit)
-                        );
-
-                        return matchStore || isStaffToko;
-                    });
-
-                    // 3. Render Tabel Rekap Staff Toko
-                    let html = `<tr><th>No</th><th>Nama Staff</th><th>Status</th></tr>`;
-                    if (staffList.length === 0) {
-                        html += `<tr><td colspan="3" style="text-align: center; color: #64748b;">Tidak ada staff di toko ini.</td></tr>`;
-                    } else {
-                        staffList.forEach((row, index) => {
-                            const namaStaffMaster = String(row[2] || "").trim().toLowerCase();
-                            
-                            const sudahSubmit = storeSubmits.some(sub => {
-                                const namaSalesSubmit = String(sub[1] || "").trim().toLowerCase();
-                                return namaSalesSubmit === namaStaffMaster || namaSalesSubmit.includes(namaStaffMaster) || namaStaffMaster.includes(namaSalesSubmit);
-                            });
-
-                            const badgeHtml = sudahSubmit 
-                                ? `<span class="status-badge sudah">✅ Sudah</span>` 
-                                : `<span class="status-badge belum">⚠️ Belum</span>`;
-
-                            html += `<tr>
-                                <td>${index + 1}</td>
-                                <td>${row[2] || '-'}</td>
-                                <td>${badgeHtml}</td>
-                            </tr>`;
-                        });
-                    }
-                    tabel.innerHTML = html;
-
-                    // 4. Render Galeri Samping Toko
-                    let galleryHtml = "";
-                    if (!storeSubmits || storeSubmits.length === 0) {
-                        galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Belum ada foto submit.</p>`;
-                    } else {
-                        storeSubmits.forEach(row => {
-                            let imageUrl = extractImageUrl(row[3]); // Kolom D (index 3)
-
-                            if (imageUrl) {
-                                galleryHtml += `
-                                    <div class="store-gallery-item">
-                                        <img src="${imageUrl}" onclick="openModal('${imageUrl}')">
-                                        <p>${row[1]}<br><span style="font-size:9px; color:#94a3b8;">${row[0]}</span></p>
-                                    </div>`;
-                            }
-                        });
-
-                        if (galleryHtml === "") {
-                            galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Belum ada foto submit.</p>`;
-                        }
-                    }
-                    galleryBox.innerHTML = galleryHtml;
-                })
-                .catch(err => console.error("Gagal menyinkronkan data submit:", err));
+            return (match && match[1]) ? match[1] : "";
         }
 
         function cekStatusSubmit(namaSales) {
             const statusCell = document.getElementById('valStatus');
             const buktiCell = document.getElementById('valBukti');
+            const btnKirim = document.getElementById('btnKirim');
+            const infoPerubahan = document.getElementById('infoPerubahan');
 
             const found = submitHistory.find(row => {
                 const namaDiSheet = String(row[1] || "").trim().toLowerCase();
@@ -558,16 +509,28 @@
 
             if (found) {
                 statusCell.innerHTML = `<span class="status-badge sudah">✅ Sudah Submit</span>`;
-                let imgUrl = extractImageUrl(found[3]); // Kolom D (index 3)
+                let imgUrl = extractImageUrl(found[3]);
 
                 if (imgUrl) {
                     buktiCell.innerHTML = `<img src="${imgUrl}" class="proof-thumbnail" onclick="openModal('${imgUrl}')" title="Klik untuk memperbesar">`;
                 } else {
                     buktiCell.textContent = "Tersimpan";
                 }
+                
+                btnKirim.disabled = true;
+                btnKirim.style.backgroundColor = "#94a3b8";
+                btnKirim.style.cursor = "not-allowed";
+                btnKirim.textContent = "Sudah Submit (Tidak Bisa Kirim Lagi)";
+                if (infoPerubahan) infoPerubahan.style.display = 'block';
             } else {
                 statusCell.innerHTML = `<span class="status-badge belum">⚠️ Belum Submit</span>`;
                 buktiCell.textContent = "-";
+
+                btnKirim.disabled = false;
+                btnKirim.style.backgroundColor = "";
+                btnKirim.style.cursor = "pointer";
+                btnKirim.textContent = "Submit";
+                if (infoPerubahan) infoPerubahan.style.display = 'none';
             }
         }
 
@@ -610,9 +573,6 @@
                     document.getElementById('valAm').textContent = row[8] || "-";
                     document.getElementById('valType').textContent = row[9] || "-";
                     document.getElementById('valTrainer').textContent = row[10] || "-";
-
-                    currentStoreAktif = row[1];
-                    tampilkanRekapOtomatis();
 
                     cekStatusSubmit(row[2]);
                     autocompleteList.innerHTML = "";
@@ -681,6 +641,26 @@
                 return;
             }
 
+            const lockedDates = JSON.parse(localStorage.getItem('adminLockedDates') || '[]');
+            if (lockedDates.includes(tanggal)) {
+                alert(`Tanggal ${tanggal} telah dikunci/ditutup oleh Admin. Tidak dapat melakukan submit pada tanggal tersebut.`);
+                loading.style.display = 'none';
+                btnKirim.style.display = 'block';
+                return;
+            }
+
+            const sudahPernahSubmit = submitHistory.some(row => {
+                const namaDiSheet = String(row[1] || "").trim().toLowerCase();
+                return namaDiSheet === nama.trim().toLowerCase();
+            });
+
+            if (sudahPernahSubmit) {
+                alert(`Staff atas nama "${nama}" sudah tercatat melakukan submit. Jika ingin melakukan perubahan, silakan hubungi trainer untuk perbaikan.`);
+                loading.style.display = 'none';
+                btnKirim.style.display = 'block';
+                return;
+            }
+
             btnKirim.style.display = 'none';
             loading.style.display = 'block';
 
@@ -711,8 +691,6 @@
                 base64Data = "";
                 loading.style.display = 'none';
                 btnKirim.style.display = 'block';
-
-                tampilkanRekapOtomatis();
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -722,54 +700,279 @@
             });
         });
 
-        function muatDataSubmit() {
-            const bulanFilter = document.getElementById('filterBulan').value;
-            const tahunFilter = document.getElementById('filterTahun').value;
-            const tabel = document.getElementById('tabelRiwayatSubmit');
+        function muatRekapNasional() {
+            const selectedBulan = document.getElementById('filterBulanRekap').value;
+            const selectedStore = document.getElementById('filterNamaTokoRekap').value.trim().toLowerCase();
+            const tabel = document.getElementById('tabelRekapNasional');
 
-            let filtered = submitHistory.filter(row => {
-                const waktu = String(row[0] || "");
-                if (!waktu) return false;
+            let filteredStores = allStoresList;
+            if (selectedStore) {
+                filteredStores = allStoresList.filter(s => s.toLowerCase() === selectedStore);
+            }
+
+            let filteredSubmits = submitHistory.filter(row => {
+                const waktuSubmit = String(row[0] || "").trim();
+                if (!selectedBulan) return true;
                 
-                let matchBulan = true;
-                let matchTahun = true;
-
-                if (bulanFilter || tahunFilter) {
-                    if (waktu.includes('/')) {
-                        const parts = waktu.split(' ')[0].split('/');
-                        if (bulanFilter && parts[1] !== bulanFilter) matchBulan = false;
-                        if (tahunFilter && parts[2] !== tahunFilter) matchTahun = false;
-                    } else if (waktu.includes('-')) {
-                        const parts = waktu.split(' ')[0].split('-');
-                        if (tahunFilter && parts[0] !== tahunFilter) matchTahun = false;
-                        if (bulanFilter && parts[1] !== bulanFilter) matchBulan = false;
+                let matchBulan = false;
+                const cleaned = waktuSubmit.replace(/[^0-9]/g, ' ');
+                const parts = cleaned.trim().split(/\s+/);
+                
+                parts.forEach(p => {
+                    if (p.length === 2 && p === selectedBulan) {
+                        matchBulan = true;
                     }
+                });
+                
+                if (waktuSubmit.includes(`-${selectedBulan}-`) || waktuSubmit.includes(`/${selectedBulan}/`) || waktuSubmit.includes(`-${selectedBulan} `)) {
+                    matchBulan = true;
                 }
-                return matchBulan && matchTahun;
+
+                return matchBulan || !selectedBulan;
             });
 
-            let html = `<tr><th>Waktu Submit</th><th>Nama Sales</th><th>Store</th><th>Bukti Screenshot</th></tr>`;
-            if (filtered.length === 0) {
-                html += `<tr><td colspan="4" style="text-align: center; color: #64748b;">Tidak ada data pada periode ini.</td></tr>`;
+            let html = `<tr>
+                <th>No</th>
+                <th>Nama Toko / Store</th>
+                <th>Total Staff</th>
+                <th>Sudah</th>
+                <th>Belum</th>
+                <th>Progress Bar Gauge</th>
+                <th>Aksi</th>
+            </tr>`;
+
+            if (filteredStores.length === 0) {
+                html += `<tr><td colspan="7" style="text-align: center; color: #64748b;">Tidak ada data toko ditemukan.</td></tr>`;
+                tabel.innerHTML = html;
+                return;
+            }
+
+            filteredStores.forEach((storeName, index) => {
+                const staffList = masterData.filter(row => String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase());
+                const totalStaff = staffList.length;
+
+                let sudahCount = 0;
+                staffList.forEach(staff => {
+                    const staffName = String(staff[2] || "").trim().toLowerCase();
+                    const subMatch = filteredSubmits.find(sub => {
+                        const namaSub = String(sub[1] || "").trim().toLowerCase();
+                        return namaSub === staffName;
+                    });
+                    if (subMatch) sudahCount++;
+                });
+
+                const belumCount = Math.max(0, totalStaff - sudahCount);
+                const percent = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
+                
+                const gaugeHtml = `
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="flex-grow: 1; background: #e2e8f0; border-radius: 4px; height: 10px; overflow: hidden; min-width: 70px;">
+                            <div style="background: ${percent === 100 ? '#10b981' : '#2563eb'}; width: ${percent}%; height: 100%; transition: width 0.3s;"></div>
+                        </div>
+                        <span style="font-size: 11px; font-weight: bold; color: #475569;">${percent}%</span>
+                    </div>
+                `;
+
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${storeName}</strong></td>
+                    <td>${totalStaff}</td>
+                    <td style="color: var(--success-green); font-weight: 600;">${sudahCount}</td>
+                    <td style="color: var(--pending-orange); font-weight: 600;">${belumCount}</td>
+                    <td>${gaugeHtml}</td>
+                    <td><button type="button" onclick="openStaffDetailModal('${storeName}')" style="background: var(--primary); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Lihat Staff</button></td>
+                </tr>`;
+            });
+
+            tabel.innerHTML = html;
+        }
+
+        function openStaffDetailModal(storeName) {
+            document.getElementById('staffModalTitle').textContent = `👥 Rincian Staff: ${storeName}`;
+            const tabel = document.getElementById('tabelDetailStaffToko');
+            const staffList = masterData.filter(row => String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase());
+
+            let html = `<tr><th>No</th><th>Nama Staff</th><th>Status</th><th>Tanggal Submit</th></tr>`;
+            if (staffList.length === 0) {
+                html += `<tr><td colspan="4" style="text-align: center; color: #64748b;">Tidak ada staff terdaftar di toko ini.</td></tr>`;
             } else {
-                filtered.forEach(row => {
-                    let imgUrl = extractImageUrl(row[3]); // Kolom D (index 3)
-                    let thumbHtml = "-";
-                    
-                    if (imgUrl) {
-                        thumbHtml = `<img src="${imgUrl}" class="proof-thumbnail" onclick="openModal('${imgUrl}')">`;
-                    }
+                staffList.forEach((staff, i) => {
+                    const staffName = String(staff[2] || "").trim().toLowerCase();
+                    const subMatch = submitHistory.find(sub => String(sub[1] || "").trim().toLowerCase() === staffName);
+                    const sudah = !!subMatch;
+                    const tgl = sudah ? (subMatch[0] || "Tersimpan") : "-";
+                    const badge = sudah ? `<span class="status-badge sudah">✅ Sudah</span>` : `<span class="status-badge belum">⚠️ Belum</span>`;
+
                     html += `<tr>
-                        <td>${row[0] || '-'}</td>
-                        <td>${row[1] || '-'}</td>
-                        <td>${row[2] || '-'}</td>
-                        <td>${thumbHtml}</td>
+                        <td>${i + 1}</td>
+                        <td>${staff[2]}</td>
+                        <td>${badge}</td>
+                        <td style="font-size: 11.5px; color: #475569;">${tgl}</td>
                     </tr>`;
                 });
             }
             tabel.innerHTML = html;
+            document.getElementById('staffDetailModal').style.display = 'flex';
+        }
+        function closeStaffModal() {
+            document.getElementById('staffDetailModal').style.display = 'none';
+        }
+
+        function updateSummaryDashboard() {
+            const totalStaff = masterData.length;
+            const submittedNames = new Set(submitHistory.map(row => String(row[1] || "").trim().toLowerCase()));
+            const sudahCount = masterData.filter(row => submittedNames.has(String(row[2] || "").trim().toLowerCase())).length;
+            const belumCount = Math.max(0, totalStaff - sudahCount);
+            const percentProgress = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
+
+            document.getElementById('sumTotalStaff').textContent = totalStaff;
+            document.getElementById('sumSudahSubmit').textContent = sudahCount;
+            document.getElementById('sumBelumSubmit').textContent = belumCount;
+            document.getElementById('sumPercentProgress').textContent = `${percentProgress}%`;
+
+            const ctx = document.getElementById('statusDonutChart').getContext('2d');
+            if (donutChartInstance) donutChartInstance.destroy();
+
+            const centerTextPlugin = {
+                id: 'centerText',
+                afterDraw(chart) {
+                    const { ctx, width, height } = chart;
+                    ctx.save();
+                    const text = `${sudahCount}/${totalStaff}`;
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, width / 2, height / 2 - 10);
+                    
+                    ctx.font = '11px sans-serif';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText('Sudah / Total', width / 2, height / 2 + 10);
+                    ctx.restore();
+                }
+            };
+
+            donutChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [`Sudah Submit (${sudahCount})`, `Belum Submit (${belumCount})`],
+                    datasets: [{
+                        data: [sudahCount, belumCount],
+                        backgroundColor: ['#10b981', '#f59e0b'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let val = context.raw || 0;
+                                    let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    let percentage = total > 0 ? Math.round((val / total) * 100) : 0;
+                                    return ` ${label}: ${val} orang (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                },
+                plugins: [centerTextPlugin]
+            });
+
+            generateAllStoresWaReminder();
+        }
+
+        function generateAllStoresWaReminder() {
+            const textarea = document.getElementById('waMessageText');
+            const submittedNames = new Set(submitHistory.map(row => String(row[1] || "").trim().toLowerCase()));
+
+            let msg = `📢 *REKAP REMINDER SALES COACH ACTIVITY NASIONAL* 📢\n\nBerikut ringkasan status submit per toko:\n`;
+            let totalBelumNasional = 0;
+
+            allStoresList.forEach((storeName, idx) => {
+                const staffList = masterData.filter(row => String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase());
+                const total = staffList.length;
+                let sudah = 0;
+                let belumList = [];
+
+                staffList.forEach(staff => {
+                    const name = String(staff[2] || "").trim();
+                    if (submittedNames.has(name.toLowerCase())) {
+                        sudah++;
+                    } else {
+                        belumList.push(name);
+                    }
+                });
+
+                if (total > 0) {
+                    msg += `\n📍 *${storeName}* (${sudah}/${total} Sudah)\n`;
+                    if (belumList.length > 0) {
+                        msg += `   Belum: ${belumList.join(', ')}\n`;
+                        totalBelumNasional += belumList.length;
+                    } else {
+                        msg += `   🎉 Lengkap 100%!\n`;
+                    }
+                }
+            });
+
+            msg += `\nTotal keseluruhan belum submit: *${totalBelumNasional} orang*. Mohon segera melengkapi aktivitasnya. Terima kasih! 🙏`;
+            textarea.value = msg;
+        }
+
+        function copyWaReminder() {
+            const textarea = document.getElementById('waMessageText');
+            textarea.select();
+            document.execCommand('copy');
+            alert("Pesan WhatsApp reminder All Toko berhasil disalin!");
+        }
+
+        function promptAdminPin() {
+            const pin = prompt("Masukkan PIN Admin:");
+            if (pin === "3333") {
+                openAdminModal();
+            } else if (pin !== null) {
+                alert("PIN salah! Akses ditolak.");
+            }
+        }
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'flex';
+            renderLockedDates();
+            generateAllStoresWaReminder();
+        }
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+        function lockDateAction() {
+            const dateInput = document.getElementById('lockDateInput').value;
+            if (!dateInput) { alert("Pilih tanggal terlebih dahulu!"); return; }
+            let lockedDates = JSON.parse(localStorage.getItem('adminLockedDates') || '[]');
+            if (!lockedDates.includes(dateInput)) {
+                lockedDates.push(dateInput);
+                localStorage.setItem('adminLockedDates', JSON.stringify(lockedDates));
+                alert(`Tanggal ${dateInput} dikunci!`);
+                renderLockedDates();
+            }
+        }
+        function removeLockDate(dStr) {
+            let lockedDates = JSON.parse(localStorage.getItem('adminLockedDates') || '[]');
+            lockedDates = lockedDates.filter(d => d !== dStr);
+            localStorage.setItem('adminLockedDates', JSON.stringify(lockedDates));
+            renderLockedDates();
+        }
+        function renderLockedDates() {
+            const container = document.getElementById('lockedDatesList');
+            let lockedDates = JSON.parse(localStorage.getItem('adminLockedDates') || '[]');
+            if (lockedDates.length === 0) { container.innerHTML = "Belum ada tanggal terkunci."; return; }
+            let html = "";
+            lockedDates.forEach(d => {
+                html += `<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;"><span>🔒 ${d}</span><button type="button" onclick="removeLockDate('${d}')" style="background:#ef4444; color:white; border:none; padding:2px 6px; border-radius:4px; font-size:10px;">Buka</button></div>`;
+            });
+            container.innerHTML = html;
         }
     </script>
-
 </body>
 </html>
