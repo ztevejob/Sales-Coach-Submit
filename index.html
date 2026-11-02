@@ -445,7 +445,6 @@
             if (!currentStoreAktif) return;
 
             const selectedStoreFull = currentStoreAktif.trim();
-            const bulanFilter = document.getElementById('filterBulanStaff').value;
             const tabel = document.getElementById('tabelStaffStore');
             const galleryBox = document.getElementById('storeGalleryContainer');
             const titleHeader = document.getElementById('storeTitleRekap');
@@ -463,7 +462,7 @@
                     const staffList = masterData.filter(row => String(row[1] || "").trim().toLowerCase() === selectedStoreFull.toLowerCase());
                     const daftarNamaStaffToko = staffList.map(row => String(row[2] || "").trim().toLowerCase());
 
-                    // 2. Filter riwayat submit berdasarkan kecocokan staff toko atau nama store secara longgar
+                    // 2. Filter riwayat submit berdasarkan staff toko (tanpa batasan bulan agar foto pasti tampil)
                     let storeSubmits = submitHistory.filter(row => {
                         const namaSalesSubmit = String(row[1] || "").trim().toLowerCase();
                         const namaStoreSheet = String(row[2] || "").trim().toLowerCase();
@@ -474,15 +473,7 @@
                             namaSalesSubmit === namaStaff || namaSalesSubmit.includes(namaStaff) || namaStaff.includes(namaSalesSubmit)
                         );
 
-                        if (!matchStore && !isStaffToko) return false;
-
-                        if (bulanFilter) {
-                            const waktu = String(row[0] || "").trim();
-                            const matchBulan = waktu.includes(`/${bulanFilter}/`) || waktu.includes(`-${bulanFilter}-`) || waktu.includes(bulanFilter);
-                            if (!matchBulan) return false;
-                        }
-
-                        return true;
+                        return matchStore || isStaffToko;
                     });
 
                     // 3. Render Tabel Rekap Staff Toko
@@ -513,8 +504,8 @@
 
                     // 4. Render Galeri Samping Toko
                     let galleryHtml = "";
-                    if (storeSubmits.length === 0) {
-                        galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 20px;">Belum ada foto submit.</p>`;
+                    if (!storeSubmits || storeSubmits.length === 0) {
+                        galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Belum ada foto submit.</p>`;
                     } else {
                         storeSubmits.forEach(row => {
                             let cellValue = String(row[3] || "").trim();
@@ -538,7 +529,7 @@
                         });
 
                         if (galleryHtml === "") {
-                            galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 20px;">Belum ada foto submit.</p>`;
+                            galleryHtml = `<p style="text-align: center; font-size: 11.5px; color: #64748b; margin-top: 30px;">Belum ada foto submit.</p>`;
                         }
                     }
                     galleryBox.innerHTML = galleryHtml;
