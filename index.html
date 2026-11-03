@@ -854,7 +854,7 @@
             const payload = {
                 nama: typedNameInput,
                 store: store,
-                tanggal: tanggalBersih, // YYYY-MM-DD
+                tanggal: tanggalBersih,
                 fileName: fileName,
                 mimeType: fileType,
                 fileData: base64Data
@@ -921,7 +921,7 @@
             }
 
             let filteredSubmits = submitHistory.filter(row => {
-                let timestamp = String(row[0] || "").trim();
+                let timestamp = formatTanggalDisplay(row[0]);
                 if (!selectedBulan) return true; 
                 
                 if (!timestamp || timestamp.length < 7) return false;
@@ -978,7 +978,6 @@
 
                 const percent = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
                 
-                // Progress Bar Gauge dengan animasi transisi halus (transition: width 0.8s ease-in-out)
                 const gaugeHtml = `
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <div style="flex-grow: 1; background: #e2e8f0; border-radius: 4px; height: 10px; overflow: hidden; min-width: 70px;">
@@ -999,7 +998,6 @@
 
             tabel.innerHTML = html;
 
-            // Trigger animasi mengisi setelah tabel dirender
             setTimeout(() => {
                 const fillBars = tabel.querySelectorAll('div[data-target-width]');
                 fillBars.forEach(bar => {
@@ -1041,10 +1039,27 @@
             document.body.removeChild(link);
         }
 
+        function formatTanggalDisplay(rawDate) {
+            if (!rawDate) return "-";
+            let str = String(rawDate).trim();
+            // Konversi ISO string atau Date object ke format lokal WIB (YYYY-MM-DD)
+            let d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                let year = d.getFullYear();
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            return str;
+        }
+
         function openStaffDetailModal(storeName) {
             const selectedTrainer = cleanStr(document.getElementById('filterTrainerRekap').value);
+            const selectedBulan = document.getElementById('filterBulanRekap').value;
+            
             document.getElementById('staffModalTitle').textContent = `👥 Rincian Staff: ${storeName}`;
             const tabel = document.getElementById('tabelDetailStaffToko');
+            
             const staffList = masterData.filter(row => {
                 const nama = String(row[2] || "").trim();
                 const isValidName = nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
@@ -1059,9 +1074,25 @@
             } else {
                 staffList.forEach((staff, i) => {
                     const staffName = cleanStr(staff[2]);
-                    const subMatch = submitHistory.find(sub => cleanStr(sub[1]) === staffName);
+                    
+                    const matchedSubmits = submitHistory.filter(sub => {
+                        let namaDiSub = cleanStr(sub[1]);
+                        let formattedDate = formatTanggalDisplay(sub[0]);
+                        
+                        if (namaDiSub !== staffName) return false;
+                        if (!selectedBulan) return true;
+                        
+                        if (formattedDate.length >= 7) {
+                            let bulanSub = formattedDate.substring(5, 7);
+                            return bulanSub === selectedBulan;
+                        }
+                        return false;
+                    });
+
+                    const subMatch = matchedSubmits.length > 0 ? matchedSubmits[matchedSubmits.length - 1] : null;
+                    
                     const sudah = !!subMatch;
-                    const tgl = sudah ? (subMatch[0] || "Tersimpan") : "-";
+                    const tgl = sudah ? formatTanggalDisplay(subMatch[0]) : "-";
                     const badge = sudah ? `<span class="status-badge sudah">✅ Sudah</span>` : `<span class="status-badge belum">⚠️ Belum</span>`;
 
                     html += `<tr>
