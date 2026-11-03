@@ -398,7 +398,7 @@
                             <option value="08">Agustus</option>
                             <option value="09">September</option>
                             <option value="10">Oktober</option>
-                            <option value="11" selected>November</option>
+                            <option value="11">November</option>
                             <option value="12">Desember</option>
                         </select>
 
@@ -410,6 +410,7 @@
                             <option value="">-- Semua Toko --</option>
                         </select>
 
+                        <button type="button" onclick="exportRekapCsv()" style="background: var(--success-green); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;" title="Export Rekap ke CSV">📥 Export CSV</button>
                         <button type="button" onclick="resetFilterRekap()" style="background: #64748b; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">Reset Filter</button>
                     </div>
                 </div>
@@ -516,7 +517,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMkhSGX8Z39ib-EvyAbO3KNCmx5AMJkIniqKGuOht6OshI5Rxan6Ua0wxgBJuMcV0BQw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwiozDQ3IOoV8dIKKvannjadxq45Jwylqipp6OWxECtWKUjsiIlJd2FfJgULFf1hsYAsw/exec";
         let masterData = [];
         let submitHistory = [];
         let donutChartInstance = null;
@@ -528,6 +529,13 @@
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggalSubmit').value = today;
+
+            // Set default filter bulan ke bulan berjalan
+            const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+            const bulanSelect = document.getElementById('filterBulanRekap');
+            if(bulanSelect) {
+                bulanSelect.value = currentMonth;
+            }
 
             checkAdminUnlockTimer();
             populateStoreDropdowns();
@@ -552,15 +560,10 @@
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(res => {
-                    console.log("Respon dari Google Sheets:", res);
                     if(res.status === "success") {
                         masterData = res.data || [];
                         submitHistory = res.submits || res.subdata || res.history || res.submitData || res.sub || [];
                         
-                        console.log("Master Data Count:", masterData.length);
-                        console.log("Submit History Count:", submitHistory.length);
-                        console.log("Sample Submit Row:", submitHistory[0]);
-
                         populateTrainerDropdown();
                         muatRekapNasional();
                         updateSummaryDashboard();
@@ -650,7 +653,7 @@
             const cleanTargetName = cleanStr(namaSales);
 
             const found = submitHistory.find(row => {
-                const namaDiSheet = cleanStr(row[1]); // Kolom B Data Submit = Nama Staff
+                const namaDiSheet = cleanStr(row[1]);
                 return namaDiSheet === cleanTargetName;
             });
 
@@ -792,7 +795,7 @@
             const typedNameInput = document.getElementById('searchNama').value.trim();
             const nama = document.getElementById('nama').value.trim();
             const store = document.getElementById('store').value.trim();
-            const tanggal = document.getElementById('tanggalSubmit').value;
+            const tanggalInput = document.getElementById('tanggalSubmit').value; // Format: YYYY-MM-DD
             const btnKirim = document.getElementById('btnKirim');
             const loading = document.getElementById('loading');
 
@@ -814,7 +817,7 @@
 
             let isAutoLocked = false;
             if (!isAdminUnlocked) {
-                const tglParts = tanggal.split('-');
+                const tglParts = tanggalInput.split('-');
                 const dayNum = parseInt(tglParts[2], 10);
                 if (dayNum >= 6) {
                     isAutoLocked = true;
@@ -822,10 +825,10 @@
             }
 
             const lockedDates = JSON.parse(localStorage.getItem('adminLockedDates') || '[]');
-            let isManualLocked = lockedDates.some(lockedD => tanggal >= lockedD);
+            let isManualLocked = lockedDates.some(lockedD => tanggalInput >= lockedD);
 
             if (isAutoLocked || isManualLocked) {
-                alert(`Tanggal ${tanggal} telah melewati batas dateline (tanggal 5) dan dikunci otomatis (Autolock). Tidak dapat melakukan submit.`);
+                alert(`Tanggal ${tanggalInput} telah melewati batas dateline (tanggal 5) dan dikunci otomatis (Autolock). Tidak dapat melakukan submit.`);
                 loading.style.display = 'none';
                 btnKirim.style.display = 'block';
                 return;
@@ -843,13 +846,15 @@
                 return;
             }
 
+            let tanggalBersih = tanggalInput;
+
             btnKirim.style.display = 'none';
             loading.style.display = 'block';
 
             const payload = {
                 nama: typedNameInput,
                 store: store,
-                tanggal: tanggal,
+                tanggal: tanggalBersih, // YYYY-MM-DD
                 fileName: fileName,
                 mimeType: fileType,
                 fileData: base64Data
@@ -915,25 +920,14 @@
                 filteredStores = filteredStores.filter(s => cleanStr(s) === selectedStore);
             }
 
-            // Filter fleksibel aman membaca Timestamp (Kolom A / row[0])
             let filteredSubmits = submitHistory.filter(row => {
                 let timestamp = String(row[0] || "").trim();
-                if (!selectedBulan) return true; // Jika bulan dikosongkan, ambil semua
+                if (!selectedBulan) return true; 
                 
-                let bulanTimestamp = "";
-                if (timestamp) {
-                    let parts = timestamp.split(" ")[0].split("/");
-                    if (parts.length === 3) {
-                        bulanTimestamp = parts[1].padStart(2, '0');
-                    } else {
-                        let partsHyphen = timestamp.split(" ")[0].split("-");
-                        if (partsHyphen.length === 3) {
-                            bulanTimestamp = partsHyphen[1].padStart(2, '0');
-                        }
-                    }
-                }
+                if (!timestamp || timestamp.length < 7) return false;
 
-                return !bulanTimestamp || bulanTimestamp === selectedBulan;
+                let bulan = timestamp.substring(5, 7);
+                return bulan === selectedBulan;
             });
 
             let html = `<tr>
@@ -973,19 +967,22 @@
                 let sudahCount = 0;
                 staffList.forEach(staff => {
                     const targetNamaStaff = cleanStr(staff[2]);
+                    
                     const sudahSubmit = filteredSubmits.some(sub => {
-                        let namaDiSubmit = cleanStr(sub[1]); // Kolom B Data Submit = Nama Staff
+                        let namaDiSubmit = cleanStr(sub[1]);
                         return namaDiSubmit === targetNamaStaff;
                     });
+                    
                     if (sudahSubmit) sudahCount++;
                 });
 
                 const percent = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
                 
+                // Progress Bar Gauge dengan animasi transisi halus (transition: width 0.8s ease-in-out)
                 const gaugeHtml = `
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <div style="flex-grow: 1; background: #e2e8f0; border-radius: 4px; height: 10px; overflow: hidden; min-width: 70px;">
-                            <div style="background: ${percent === 100 ? '#10b981' : '#2563eb'}; width: ${percent}%; height: 100%; transition: width 0.3s;"></div>
+                            <div style="background: ${percent === 100 ? '#10b981' : '#2563eb'}; width: 0%; height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);" data-target-width="${percent}"></div>
                         </div>
                         <span style="font-size: 11px; font-weight: bold; color: #475569;">${percent}% (${sudahCount}/${totalStaff})</span>
                     </div>
@@ -1001,7 +998,47 @@
             });
 
             tabel.innerHTML = html;
+
+            // Trigger animasi mengisi setelah tabel dirender
+            setTimeout(() => {
+                const fillBars = tabel.querySelectorAll('div[data-target-width]');
+                fillBars.forEach(bar => {
+                    const targetW = bar.getAttribute('data-target-width');
+                    bar.style.width = targetW + '%';
+                });
+            }, 50);
+
             generateAllStoresWaReminder();
+        }
+
+        function exportRekapCsv() {
+            const selectedBulan = document.getElementById('filterBulanRekap').value || "Semua_Bulan";
+            let csvContent = "data:text/csv;charset=utf-8,No,Nama Toko,Total Staff,Sudah Submit,Persentase\n";
+
+            const rows = document.querySelectorAll("#tabelRekapNasional tr");
+            if (rows.length <= 1) {
+                alert("Tidak ada data untuk diexport!");
+                return;
+            }
+
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].querySelectorAll("td");
+                if (cols.length >= 4) {
+                    const no = cols[0].innerText;
+                    const store = cols[1].innerText.replace(/,/g, "");
+                    const totalStaff = cols[2].innerText;
+                    const gaugeText = cols[3].innerText;
+                    csvContent += `${no},"${store}",${totalStaff},"${gaugeText}"\n`;
+                }
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Rekap_Sales_Coach_${selectedBulan}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function openStaffDetailModal(storeName) {
