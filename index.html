@@ -409,6 +409,8 @@
                         <select id="filterNamaTokoRekap" onchange="muatRekapNasional()" style="width: 160px; padding: 6px; font-size: 12.5px;">
                             <option value="">-- Semua Toko --</option>
                         </select>
+
+                        <button type="button" onclick="resetFilterRekap()" style="background: #64748b; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">Reset Filter</button>
                     </div>
                 </div>
 
@@ -550,14 +552,19 @@
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(res => {
+                    console.log("Respon dari Google Sheets:", res);
                     if(res.status === "success") {
                         masterData = res.data || [];
-                        submitHistory = res.submits || res.subdata || [];
+                        submitHistory = res.submits || res.subdata || res.history || res.submitData || res.sub || [];
+                        
+                        console.log("Master Data Count:", masterData.length);
+                        console.log("Submit History Count:", submitHistory.length);
+                        console.log("Sample Submit Row:", submitHistory[0]);
+
                         populateTrainerDropdown();
                         muatRekapNasional();
                         updateSummaryDashboard();
                         
-                        // Jika nama sudah terisi sebelumnya, validasi ulang status submit-nya secara akurat
                         const currentNameInput = document.getElementById('searchNama').value.trim();
                         if (currentNameInput) {
                             cekStatusSubmit(currentNameInput);
@@ -630,16 +637,20 @@
             return (match && match[1]) ? match[1] : "";
         }
 
+        function cleanStr(str) {
+            return String(str || "").trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
         function cekStatusSubmit(namaSales) {
             const statusCell = document.getElementById('valStatus');
             const buktiCell = document.getElementById('valBukti');
             const btnKirim = document.getElementById('btnKirim');
             const infoPerubahan = document.getElementById('infoPerubahan');
 
-            const cleanTargetName = namaSales.trim().toLowerCase();
+            const cleanTargetName = cleanStr(namaSales);
 
             const found = submitHistory.find(row => {
-                const namaDiSheet = String(row[1] || "").trim().toLowerCase();
+                const namaDiSheet = cleanStr(row[1]); // Kolom B Data Submit = Nama Staff
                 return namaDiSheet === cleanTargetName;
             });
 
@@ -677,7 +688,6 @@
             const val = this.value.trim().toLowerCase();
             autocompleteList.innerHTML = "";
             
-            // Jika input dikosongkan, reset form profil
             if (!val) {
                 document.getElementById('nama').value = "";
                 document.getElementById('store').value = "";
@@ -786,9 +796,8 @@
             const btnKirim = document.getElementById('btnKirim');
             const loading = document.getElementById('loading');
 
-            // Validasi Ketat: Cek apakah nama diketik lengkap dan terdaftar secara persis di masterData
-            const cleanTypedName = typedNameInput.toLowerCase();
-            const isValidMaster = masterData.some(row => String(row[2] || "").trim().toLowerCase() === cleanTypedName);
+            const cleanTypedName = cleanStr(typedNameInput);
+            const isValidMaster = masterData.some(row => cleanStr(row[2]) === cleanTypedName);
 
             if (!typedNameInput || !nama || !store || !isValidMaster) {
                 alert("⚠️ Peringatan: Nama karyawan belum dipilih atau penulisan nama kurang lengkap / tidak terdaftar di database master. Silakan pilih dari daftar otomatis.");
@@ -823,7 +832,7 @@
             }
 
             const sudahPernahSubmit = submitHistory.some(row => {
-                const namaDiSheet = String(row[1] || "").trim().toLowerCase();
+                const namaDiSheet = cleanStr(row[1]);
                 return namaDiSheet === cleanTypedName;
             });
 
@@ -874,10 +883,17 @@
             });
         });
 
+        function resetFilterRekap() {
+            document.getElementById('filterBulanRekap').value = "";
+            document.getElementById('filterTrainerRekap').value = "";
+            document.getElementById('filterNamaTokoRekap').value = "";
+            muatRekapNasional();
+        }
+
         function muatRekapNasional() {
             const selectedBulan = document.getElementById('filterBulanRekap').value;
-            const selectedTrainer = document.getElementById('filterTrainerRekap').value.trim().toLowerCase();
-            const selectedStore = document.getElementById('filterNamaTokoRekap').value.trim().toLowerCase();
+            const selectedTrainer = cleanStr(document.getElementById('filterTrainerRekap').value);
+            const selectedStore = cleanStr(document.getElementById('filterNamaTokoRekap').value);
             const tabel = document.getElementById('tabelRekapNasional');
 
             let filteredStores = allStoresList;
@@ -887,8 +903,8 @@
                     const staffInStore = masterData.filter(row => {
                         const nama = String(row[2] || "").trim();
                         const isValidName = nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
-                        const storeMatch = String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase();
-                        const trainerMatch = String(row[10] || "").trim().toLowerCase() === selectedTrainer;
+                        const storeMatch = cleanStr(row[1]) === cleanStr(storeName);
+                        const trainerMatch = cleanStr(row[10]) === selectedTrainer;
                         return isValidName && storeMatch && trainerMatch;
                     });
                     return staffInStore.length > 0;
@@ -896,28 +912,28 @@
             }
 
             if (selectedStore) {
-                filteredStores = filteredStores.filter(s => s.toLowerCase() === selectedStore);
+                filteredStores = filteredStores.filter(s => cleanStr(s) === selectedStore);
             }
 
+            // Filter fleksibel aman membaca Timestamp (Kolom A / row[0])
             let filteredSubmits = submitHistory.filter(row => {
-                const waktuSubmit = String(row[0] || "").trim();
-                if (!selectedBulan) return true;
+                let timestamp = String(row[0] || "").trim();
+                if (!selectedBulan) return true; // Jika bulan dikosongkan, ambil semua
                 
-                let matchBulan = false;
-                const cleaned = waktuSubmit.replace(/[^0-9]/g, ' ');
-                const parts = cleaned.trim().split(/\s+/);
-                
-                parts.forEach(p => {
-                    if (p.length === 2 && p === selectedBulan) {
-                        matchBulan = true;
+                let bulanTimestamp = "";
+                if (timestamp) {
+                    let parts = timestamp.split(" ")[0].split("/");
+                    if (parts.length === 3) {
+                        bulanTimestamp = parts[1].padStart(2, '0');
+                    } else {
+                        let partsHyphen = timestamp.split(" ")[0].split("-");
+                        if (partsHyphen.length === 3) {
+                            bulanTimestamp = partsHyphen[1].padStart(2, '0');
+                        }
                     }
-                });
-                
-                if (waktuSubmit.includes(`-${selectedBulan}-`) || waktuSubmit.includes(`/${selectedBulan}/`) || waktuSubmit.includes(`-${selectedBulan} `)) {
-                    matchBulan = true;
                 }
 
-                return matchBulan || !selectedBulan;
+                return !bulanTimestamp || bulanTimestamp === selectedBulan;
             });
 
             let html = `<tr>
@@ -936,23 +952,32 @@
             }
 
             filteredStores.forEach((storeName, index) => {
-                const staffList = masterData.filter(row => {
+                const rawStaffList = masterData.filter(row => {
                     const nama = String(row[2] || "").trim();
                     const isValidName = nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
-                    const storeMatch = String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase();
-                    const trainerMatch = !selectedTrainer || String(row[10] || "").trim().toLowerCase() === selectedTrainer;
+                    const storeMatch = cleanStr(row[1]) === cleanStr(storeName);
+                    const trainerMatch = !selectedTrainer || cleanStr(row[10]) === selectedTrainer;
                     return isValidName && storeMatch && trainerMatch;
                 });
+
+                const uniqueStaffMap = new Map();
+                rawStaffList.forEach(staff => {
+                    let staffName = cleanStr(staff[2]);
+                    if (!uniqueStaffMap.has(staffName)) {
+                        uniqueStaffMap.set(staffName, staff);
+                    }
+                });
+                const staffList = Array.from(uniqueStaffMap.values());
                 const totalStaff = staffList.length;
 
                 let sudahCount = 0;
                 staffList.forEach(staff => {
-                    const staffName = String(staff[2] || "").trim().toLowerCase();
-                    const subMatch = filteredSubmits.find(sub => {
-                        const namaSub = String(sub[1] || "").trim().toLowerCase();
-                        return namaSub === staffName;
+                    const targetNamaStaff = cleanStr(staff[2]);
+                    const sudahSubmit = filteredSubmits.some(sub => {
+                        let namaDiSubmit = cleanStr(sub[1]); // Kolom B Data Submit = Nama Staff
+                        return namaDiSubmit === targetNamaStaff;
                     });
-                    if (subMatch) sudahCount++;
+                    if (sudahSubmit) sudahCount++;
                 });
 
                 const percent = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
@@ -962,7 +987,7 @@
                         <div style="flex-grow: 1; background: #e2e8f0; border-radius: 4px; height: 10px; overflow: hidden; min-width: 70px;">
                             <div style="background: ${percent === 100 ? '#10b981' : '#2563eb'}; width: ${percent}%; height: 100%; transition: width 0.3s;"></div>
                         </div>
-                        <span style="font-size: 11px; font-weight: bold; color: #475569;">${percent}%</span>
+                        <span style="font-size: 11px; font-weight: bold; color: #475569;">${percent}% (${sudahCount}/${totalStaff})</span>
                     </div>
                 `;
 
@@ -980,14 +1005,14 @@
         }
 
         function openStaffDetailModal(storeName) {
-            const selectedTrainer = document.getElementById('filterTrainerRekap').value.trim().toLowerCase();
+            const selectedTrainer = cleanStr(document.getElementById('filterTrainerRekap').value);
             document.getElementById('staffModalTitle').textContent = `👥 Rincian Staff: ${storeName}`;
             const tabel = document.getElementById('tabelDetailStaffToko');
             const staffList = masterData.filter(row => {
                 const nama = String(row[2] || "").trim();
                 const isValidName = nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
-                const storeMatch = String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase();
-                const trainerMatch = !selectedTrainer || String(row[10] || "").trim().toLowerCase() === selectedTrainer;
+                const storeMatch = cleanStr(row[1]) === cleanStr(storeName);
+                const trainerMatch = !selectedTrainer || cleanStr(row[10]) === selectedTrainer;
                 return isValidName && storeMatch && trainerMatch;
             });
 
@@ -996,8 +1021,8 @@
                 html += `<tr><td colspan="4" style="text-align: center; color: #64748b;">Tidak ada staff terdaftar di toko ini.</td></tr>`;
             } else {
                 staffList.forEach((staff, i) => {
-                    const staffName = String(staff[2] || "").trim().toLowerCase();
-                    const subMatch = submitHistory.find(sub => String(sub[1] || "").trim().toLowerCase() === staffName);
+                    const staffName = cleanStr(staff[2]);
+                    const subMatch = submitHistory.find(sub => cleanStr(sub[1]) === staffName);
                     const sudah = !!subMatch;
                     const tgl = sudah ? (subMatch[0] || "Tersimpan") : "-";
                     const badge = sudah ? `<span class="status-badge sudah">✅ Sudah</span>` : `<span class="status-badge belum">⚠️ Belum</span>`;
@@ -1020,12 +1045,17 @@
         function updateSummaryDashboard() {
             const validStaffMaster = masterData.filter(row => {
                 const nama = String(row[2] || "").trim();
-                return nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
+                const store = String(row[1] || "").trim();
+                return nama !== "" && 
+                       store !== "" && 
+                       nama.toLowerCase() !== "employee name" && 
+                       nama.toLowerCase() !== "nama" && 
+                       store.toLowerCase() !== "store";
             });
             const totalStaff = validStaffMaster.length;
             
-            const submittedNames = new Set(submitHistory.map(row => String(row[1] || "").trim().toLowerCase()));
-            const sudahCount = validStaffMaster.filter(row => submittedNames.has(String(row[2] || "").trim().toLowerCase())).length;
+            const submittedNames = new Set(submitHistory.map(row => cleanStr(row[1])));
+            const sudahCount = validStaffMaster.filter(row => submittedNames.has(cleanStr(row[2]))).length;
             const belumCount = Math.max(0, totalStaff - sudahCount);
             const persenProgress = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
 
@@ -1092,8 +1122,8 @@
 
         function generateAllStoresWaReminder() {
             const textarea = document.getElementById('waMessageText');
-            const selectedTrainer = document.getElementById('filterTrainerRekap').value.trim().toLowerCase();
-            const submittedNames = new Set(submitHistory.map(row => String(row[1] || "").trim().toLowerCase()));
+            const selectedTrainer = cleanStr(document.getElementById('filterTrainerRekap').value);
+            const submittedNames = new Set(submitHistory.map(row => cleanStr(row[1])));
 
             let trainerLabel = selectedTrainer ? ` (Trainer: ${document.getElementById('filterTrainerRekap').options[document.getElementById('filterTrainerRekap').selectedIndex].text})` : " Nasional";
             let msg = `📢 *REKAP REMINDER SALES COACH ACTIVITY${trainerLabel}* 📢\n\nBerikut ringkasan status submit per toko:\n`;
@@ -1105,8 +1135,8 @@
                     const staffInStore = masterData.filter(row => {
                         const nama = String(row[2] || "").trim();
                         const isValidName = nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
-                        const storeMatch = String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase();
-                        const trainerMatch = String(row[10] || "").trim().toLowerCase() === selectedTrainer;
+                        const storeMatch = cleanStr(row[1]) === cleanStr(storeName);
+                        const trainerMatch = cleanStr(row[10]) === selectedTrainer;
                         return isValidName && storeMatch && trainerMatch;
                     });
                     return staffInStore.length > 0;
@@ -1117,8 +1147,8 @@
                 const staffList = masterData.filter(row => {
                     const nama = String(row[2] || "").trim();
                     const isValidName = nama !== "" && nama.toLowerCase() !== "employee name" && nama.toLowerCase() !== "nama";
-                    const storeMatch = String(row[1] || "").trim().toLowerCase() === storeName.toLowerCase();
-                    const trainerMatch = !selectedTrainer || String(row[10] || "").trim().toLowerCase() === selectedTrainer;
+                    const storeMatch = cleanStr(row[1]) === cleanStr(storeName);
+                    const trainerMatch = !selectedTrainer || cleanStr(row[10]) === selectedTrainer;
                     return isValidName && storeMatch && trainerMatch;
                 });
                 const total = staffList.length;
@@ -1127,7 +1157,7 @@
 
                 staffList.forEach(staff => {
                     const name = String(staff[2] || "").trim();
-                    if (submittedNames.has(name.toLowerCase())) {
+                    if (submittedNames.has(cleanStr(name))) {
                         sudah++;
                     } else {
                         belumList.push(name);
