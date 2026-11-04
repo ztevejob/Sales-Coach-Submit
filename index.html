@@ -456,6 +456,14 @@
                     </div>
                 </div>
 
+                <!-- POWER GAUGE MASING-MASING AREA MANAGER (AM) -->
+                <div class="card" style="margin-top: 15px;">
+                    <h4 style="margin-top: 0; color: #334155; font-size: 14px; margin-bottom: 12px;">🎯 Power Gauge per Area Manager (AM)</h4>
+                    <div id="amGaugeContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Render via JavaScript -->
+                    </div>
+                </div>
+
                 <div class="card" style="margin-bottom: 0; text-align: center;">
                     <h4 style="margin-top: 0; color: #334155; font-size: 14px;">Grafik Status Submit Nasional</h4>
                     <div style="max-width: 280px; margin: 0 auto; position: relative;">
@@ -530,7 +538,6 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggalSubmit').value = today;
 
-            // Set default filter bulan ke bulan berjalan
             const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
             const bulanSelect = document.getElementById('filterBulanRekap');
             if(bulanSelect) {
@@ -795,7 +802,7 @@
             const typedNameInput = document.getElementById('searchNama').value.trim();
             const nama = document.getElementById('nama').value.trim();
             const store = document.getElementById('store').value.trim();
-            const tanggalInput = document.getElementById('tanggalSubmit').value; // Format: YYYY-MM-DD
+            const tanggalInput = document.getElementById('tanggalSubmit').value; 
             const btnKirim = document.getElementById('btnKirim');
             const loading = document.getElementById('loading');
 
@@ -978,10 +985,11 @@
 
                 const percent = totalStaff > 0 ? Math.round((sudahCount / totalStaff) * 100) : 0;
                 
+                const gaugeColor = percent === 100 ? '#7c3aed' : '#6366f1';
                 const gaugeHtml = `
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <div style="flex-grow: 1; background: #e2e8f0; border-radius: 4px; height: 10px; overflow: hidden; min-width: 70px;">
-                            <div style="background: ${percent === 100 ? '#10b981' : '#2563eb'}; width: 0%; height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);" data-target-width="${percent}"></div>
+                            <div style="background: ${gaugeColor}; width: 0%; height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);" data-target-width="${percent}"></div>
                         </div>
                         <span style="font-size: 11px; font-weight: bold; color: #475569;">${percent}% (${sudahCount}/${totalStaff})</span>
                     </div>
@@ -1042,7 +1050,6 @@
         function formatTanggalDisplay(rawDate) {
             if (!rawDate) return "-";
             let str = String(rawDate).trim();
-            // Konversi ISO string atau Date object ke format lokal WIB (YYYY-MM-DD)
             let d = new Date(str);
             if (!isNaN(d.getTime())) {
                 let year = d.getFullYear();
@@ -1131,6 +1138,60 @@
             document.getElementById('sumSudahSubmit').textContent = sudahCount;
             document.getElementById('sumBelumSubmit').textContent = belumCount;
             document.getElementById('sumPersenProgress').textContent = persenProgress + '%';
+
+            // --- RENDER POWER GAUGE PER AREA MANAGER (AM) ---
+            const amMap = new Map();
+            validStaffMaster.forEach(row => {
+                // Kolom AM berada pada indeks ke-8 (row[8]) berdasarkan urutan kolom di profil
+                let amName = String(row[8] || "").trim();
+                if (!amName || amName.toLowerCase() === "am" || amName.toLowerCase() === "area manager") {
+                    amName = "Unassigned / Lainnya";
+                }
+                
+                if (!amMap.has(amName)) {
+                    amMap.set(amName, { total: 0, sudah: 0 });
+                }
+                
+                let stats = amMap.get(amName);
+                stats.total++;
+                
+                const staffName = cleanStr(row[2]);
+                if (submittedNames.has(staffName)) {
+                    stats.sudah++;
+                }
+            });
+
+            const amGaugeContainer = document.getElementById('amGaugeContainer');
+            let amHtml = "";
+
+            if (amMap.size === 0) {
+                amHtml = `<div style="text-align: center; color: #64748b; font-size: 12px;">Tidak ada data Area Manager.</div>`;
+            } else {
+                const sortedAm = Array.from(amMap.entries()).sort((a, b) => {
+                    let pctA = a[1].total > 0 ? (a[1].sudah / a[1].total) : 0;
+                    let pctB = b[1].total > 0 ? (b[1].sudah / b[1].total) : 0;
+                    return pctB - pctA;
+                });
+
+                sortedAm.forEach(([amName, stats]) => {
+                    let percent = stats.total > 0 ? Math.round((stats.sudah / stats.total) * 100) : 0;
+                    let barColor = percent === 100 ? '#7c3aed' : (percent >= 50 ? '#6366f1' : '#06b6d4');
+
+                    amHtml += `
+                        <div style="background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12.5px;">
+                                <strong style="color: #1e293b;">👤 ${amName}</strong>
+                                <span style="font-weight: 600; color: #475569;">${stats.sudah}/${stats.total} Staff (${percent}%)</span>
+                            </div>
+                            <div style="background: #e2e8f0; border-radius: 6px; height: 10px; overflow: hidden; width: 100%;">
+                                <div style="background: ${barColor}; width: ${percent}%; height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            amGaugeContainer.innerHTML = amHtml;
+            // ------------------------------------------------
 
             const ctx = document.getElementById('statusDonutChart').getContext('2d');
             if (donutChartInstance) donutChartInstance.destroy();
