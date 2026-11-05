@@ -497,6 +497,24 @@
         </div>
     </div>
 
+    <!-- Modal Detail Toko per AM -->
+    <div id="amStoreDetailModal" class="modal" onclick="closeAmStoreModal(event)">
+        <div style="background: white; padding: 20px; border-radius: 12px; max-width: 650px; width: 92%; max-height: 85vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
+            <span class="modal-close" style="color: #334155; top: 12px; right: 18px; font-size: 26px;" onclick="closeAmStoreModal()">&times;</span>
+            <h3 id="amStoreModalTitle" style="margin-top: 0; color: var(--primary); font-size: 16px;">🏬 Rincian Toko & Staff - AM</h3>
+            <div style="overflow-x: auto; margin-top: 12px;">
+                <table class="data-table" id="tabelDetailAmStore">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Toko</th>
+                        <th>Nama Staff</th>
+                        <th>Status</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Modal -->
     <div id="adminModal" class="modal" onclick="closeAdminModal(event)">
         <div style="background: white; padding: 20px; border-radius: 12px; max-width: 520px; width: 92%; max-height: 90vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
@@ -1117,6 +1135,52 @@
             document.getElementById('staffDetailModal').style.display = 'none';
         }
 
+        // Fungsi Modal Lihat Toko per AM
+        function openAmStoreDetailModal(amName) {
+            document.getElementById('amStoreModalTitle').textContent = `🏬 Rincian Toko & Staff - AM: ${amName}`;
+            const tabel = document.getElementById('tabelDetailAmStore');
+            const submittedNames = new Set(submitHistory.map(row => cleanStr(row[1])));
+
+            const validStaffMaster = masterData.filter(row => {
+                const nama = String(row[2] || "").trim();
+                const store = String(row[1] || "").trim();
+                let rowAm = String(row[8] || "").trim();
+                if (!rowAm || rowAm.toLowerCase() === "am" || rowAm.toLowerCase() === "area manager") {
+                    rowAm = "Unassigned / Lainnya";
+                }
+                return nama !== "" && 
+                       store !== "" && 
+                       nama.toLowerCase() !== "employee name" && 
+                       nama.toLowerCase() !== "nama" && 
+                       store.toLowerCase() !== "store" &&
+                       rowAm === amName;
+            });
+
+            let html = `<tr><th>No</th><th>Nama Toko</th><th>Nama Staff</th><th>Status</th></tr>`;
+            if (validStaffMaster.length === 0) {
+                html += `<tr><td colspan="4" style="text-align: center; color: #64748b;">Tidak ada data staff untuk Area Manager ini.</td></tr>`;
+            } else {
+                validStaffMaster.forEach((staff, i) => {
+                    const staffName = cleanStr(staff[2]);
+                    const storeName = staff[1];
+                    const sudah = submittedNames.has(staffName);
+                    const badge = sudah ? `<span class="status-badge sudah">✅ Sudah</span>` : `<span class="status-badge belum">⚠️ Belum</span>`;
+
+                    html += `<tr>
+                        <td>${i + 1}</td>
+                        <td>${storeName}</td>
+                        <td>${staff[2]}</td>
+                        <td>${badge}</td>
+                    </tr>`;
+                });
+            }
+            tabel.innerHTML = html;
+            document.getElementById('amStoreDetailModal').style.display = 'flex';
+        }
+        function closeAmStoreModal() {
+            document.getElementById('amStoreDetailModal').style.display = 'none';
+        }
+
         function updateSummaryDashboard() {
             const validStaffMaster = masterData.filter(row => {
                 const nama = String(row[2] || "").trim();
@@ -1139,10 +1203,9 @@
             document.getElementById('sumBelumSubmit').textContent = belumCount;
             document.getElementById('sumPersenProgress').textContent = persenProgress + '%';
 
-            // --- RENDER POWER GAUGE PER AREA MANAGER (AM) ---
+            // --- RENDER POWER GAUGE PER AREA MANAGER (AM) DENGAN TOMBOL LIHAT TOKO ---
             const amMap = new Map();
             validStaffMaster.forEach(row => {
-                // Kolom AM berada pada indeks ke-8 (row[8]) berdasarkan urutan kolom di profil
                 let amName = String(row[8] || "").trim();
                 if (!amName || amName.toLowerCase() === "am" || amName.toLowerCase() === "area manager") {
                     amName = "Unassigned / Lainnya";
@@ -1177,11 +1240,15 @@
                     let percent = stats.total > 0 ? Math.round((stats.sudah / stats.total) * 100) : 0;
                     let barColor = percent === 100 ? '#7c3aed' : (percent >= 50 ? '#6366f1' : '#06b6d4');
 
+                    let escapedAmName = amName.replace(/'/g, "\\'");
                     amHtml += `
                         <div style="background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12.5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12.5px; flex-wrap: wrap; gap: 6px;">
                                 <strong style="color: #1e293b;">👤 ${amName}</strong>
-                                <span style="font-weight: 600; color: #475569;">${stats.sudah}/${stats.total} Staff (${percent}%)</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-weight: 600; color: #475569;">${stats.sudah}/${stats.total} Staff (${percent}%)</span>
+                                    <button type="button" onclick="openAmStoreDetailModal('${escapedAmName}')" style="background: var(--primary); color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Lihat Toko</button>
+                                </div>
                             </div>
                             <div style="background: #e2e8f0; border-radius: 6px; height: 10px; overflow: hidden; width: 100%;">
                                 <div style="background: ${barColor}; width: ${percent}%; height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
